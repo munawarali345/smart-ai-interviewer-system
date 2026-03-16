@@ -1,0 +1,39 @@
+# ==================== Base Image ====================
+# Node.js version 20 - alpine version light weight hota hai
+FROM node:20-alpine
+
+# ==================== Working Directory ====================
+# Container ke andar working folder set kar rahe hain
+WORKDIR /usr/src/app
+
+# ==================== Dependencies Installation ====================
+# Pehle package.json copy karte hain (caching ke liye)
+# Yeh step cached rahega jab code change hoga sirf
+COPY package*.json ./
+
+# Production dependencies install kar rahe hain
+# npm ci clean install karta hai - package-lock.json follow karta hai
+RUN npm ci
+
+# ==================== Source Code Copy ====================
+# Saara source code container me copy kar rahe hain
+COPY . .
+
+# ==================== Uploads Directory ====================
+# Uploads folder create kar rahe hain file uploads ke liye
+# -p flag parent directories banaega agar na hoen
+RUN mkdir -p uploads/resumes
+
+# ==================== Build Next.js ====================
+# Next.js application build kar rahe hain
+# Ye optimized production build banayega
+RUN npm run build
+
+# ==================== Port Exposure ====================
+# Port 3000 expose kar rahe hain (Next.js default port)
+EXPOSE 3000
+
+# ==================== Start Command ====================
+# Container start hone par ye command chalega
+# npm start production mode me Next.js chalta hai
+CMD ["npm", "start"]

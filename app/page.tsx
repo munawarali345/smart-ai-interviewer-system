@@ -1,65 +1,125 @@
-import Image from "next/image";
+// ================================
+// Main Page - AI Interview System
+// ================================
+// Purpose: Landing page that uses existing ResumeUpload component
 
-export default function Home() {
+// ================================
+// Imports
+// ================================
+// Lucide icons
+import { Bot, FileText, CheckCircle } from "lucide-react";
+// Existing ResumeUpload component
+import ResumeUpload from "@/components/ResumeUpload";
+
+
+
+// ================================
+// Main Component
+// ================================
+export default function HomePage() {
+
+  // ================================
+  // Render
+  // ================================
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Header Section */}
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            {/* Logo and Title */}
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-600 p-2 rounded-lg">
+                <Bot className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">
+                  AI Interview System
+                </h1>
+                <p className="text-sm text-slate-500">
+                  Powered by Groq AI
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Welcome Section */}
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-slate-900 mb-4">
+            Welcome to AI-Powered Interviews
+          </h2>
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            Upload your resume and get personalized interview questions based on your skills and experience.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Upload Card */}
+        <div className="max-w-xl mx-auto">
+          {/* Card Container */}
+          <div className="bg-white rounded-xl border-2 border-slate-200 shadow-lg overflow-hidden">
+            {/* Card Header */}
+            <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
+              <h3 className="text-xl font-semibold text-slate-900">
+                Upload Your Resume
+              </h3>
+              <p className="text-sm text-slate-500 mt-1">
+                Supported formats: PDF, DOC, DOCX
+              </p>
+            </div>
+
+            {/* Card Body - Using Existing ResumeUpload Component */}
+            <div className="p-6">
+              <ResumeUpload />
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+
+        {/* Features Section */}
+        <div className="mt-16 grid md:grid-cols-3 gap-8">
+          {/* Feature 1 */}
+          <div className="text-center">
+            <div className="bg-blue-100 p-4 rounded-full w-16 h-16 mx-auto mb-4">
+              <FileText className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              Smart Resume Parsing
+            </h3>
+            <p className="text-slate-600">
+              AI automatically extracts your skills and experience from resume
+            </p>
+          </div>
+
+          {/* Feature 2 */}
+          <div className="text-center">
+            <div className="bg-green-100 p-4 rounded-full w-16 h-16 mx-auto mb-4">
+              <Bot className="h-8 w-8 text-green-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              Personalized Questions
+            </h3>
+            <p className="text-slate-600">
+              Get interview questions tailored to your tech stack
+            </p>
+          </div>
+
+          {/* Feature 3 */}
+          <div className="text-center">
+            <div className="bg-purple-100 p-4 rounded-full w-16 h-16 mx-auto mb-4">
+              <CheckCircle className="h-8 w-8 text-purple-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              Instant Feedback
+            </h3>
+            <p className="text-slate-600">
+              Get detailed feedback on your answers instantly
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }

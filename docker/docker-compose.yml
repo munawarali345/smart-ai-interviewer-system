@@ -1,0 +1,57 @@
+# Docker Compose version - containers ko define karne ke liye
+version: '3.9'
+
+# Sab services (containers) yahan define hote hain
+services:
+  # ==================== MongoDB Service ====================
+  # Database ke liye MongoDB container
+  mongo:
+    # Official MongoDB image (version 7)
+    image: mongo:7
+    # Container ka custom naam - easy identify ke liye
+    container_name: ai_mongo
+    # Hamesha auto-restart agar crash ho jaye
+    restart: always
+    # Port 27017 expose kar rahe hain (host:container)
+    ports:
+      - "27017:27017"
+    # Volume mount kar rahe hain - taake data container delete hone ke baad bhi rahe
+    volumes:
+      - mongo_data:/data/db
+
+  # ==================== Next.js App Service ====================
+  # Frontend/Backend Next.js application
+  app:
+    # Build settings - kahan se build karna hai
+    build:
+      # Current directory se build karna hai
+      context: .
+      # DockerFile ka path
+      dockerfile: docker/dockerFile
+    # Container ka naam
+    container_name: ai_interview_app
+    # Auto-restart enable
+    restart: always
+    # Port 3000 expose kar rahe hain (Next.js default port)
+    ports:
+      - "3000:3000"
+    # Environment variables - secrets aur configuration ke liye
+    environment:
+      # MongoDB connection string - mongo service se connect hoga
+      # "mongo" service ka naam hostname hai Docker network me
+      - MONGO_URI=mongodb://mongo:27017/interviewdb
+      # Groq API key - .env file se aayega (security ke liye)
+      - GROK_API_KEY=${GROK_API_KEY}
+    # Dependency - app tabhi start hoga jab mongo ready ho jaye
+    depends_on:
+      - mongo
+    # Local uploads folder ko container se share kar rahe hain
+    # Files container restart ke baad bhi rahenge
+    volumes:
+      - ./uploads:/usr/src/app/uploads
+
+# ==================== Volumes ====================
+# Named volumes define karne ke liye - data persistence ke liye
+volumes:
+  # MongoDB data volume - database files store hogi
+  mongo_data:

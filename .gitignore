@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# uploads - Resume PDFs (sensitive data, har environment me alag hota hai)
+uploads/
+
+# logs - Winston logs folder
+logs/
