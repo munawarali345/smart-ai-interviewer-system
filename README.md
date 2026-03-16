@@ -406,7 +406,7 @@ cd interview-system
 
 ### Step 2: Install Dependencies
 
-```bash
+```powershell
 # Install all npm packages (sab packages ek saath install honge)
 npm install
 ```
@@ -452,12 +452,18 @@ npm install
 
 ### Step 3: Setup MongoDB with Docker
 
-```bash
-# Method 1: Using docker-compose (Recommended)
-cd docker
-docker-compose up -d
+```powershell
+# Method 1: Only MongoDB (Recommended for local development)
+# PowerShell me ye command chalao:
+docker run -d --name ai_mongo -p 27017:27017 -v mongo_data:/data/db mongo:7
 
-# Method 2: Manual Docker run
+# Method 2: Using docker-compose (MongoDB + App)
+cd docker
+
+# just run mongo on docker
+docker compose -f docker/docker-compose.yml up -d mongo
+
+# Method 3: Manual Docker run (Bash/Linux)
 docker run -d \
   --name mongodb \
   -p 27017:27017 \
@@ -469,7 +475,10 @@ docker ps
 
 # You should see:
 # CONTAINER ID   IMAGE       COMMAND                  STATUS
-# abc123         mongo:latest "docker-entrypoint.s…"   Up 2 minutes
+# abc123         mongo:7     "docker-entrypoint.s…"   Up 2 minutes
+```
+
+
 ```
 
 **Why Docker?**
