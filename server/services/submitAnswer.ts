@@ -25,12 +25,12 @@ export async function submitAnswer (interviewId: string, answer: string) {
         throw new Error("Interview is already completed");
     }
 
-    // STEP 2: Questions check karte hain
+    // STEP 2: Questions check karte hain pehle se to ni he na interview me
     if (interview.questions.length === 0) {
        throw new Error("No questions in this interview");
     };
     
-    // Current question (sabse latest) nikalte hain
+    // Current question (sabse latest) question nikalte he nikalte hain
     const currentQuestion = interview.questions[interview.questions.length - 1];
     
     // Answer aur timestamp save karte hain

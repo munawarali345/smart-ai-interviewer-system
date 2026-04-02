@@ -4,6 +4,11 @@
 // Purpose: Check that all required environment variables exist
 // When: Runs when app starts, before any database or API calls
 
+// is me hum .env file ko chec k ker re he k mongo url exit karta he k ni
+// groq api kiey exist kerti he k ni 
+// url exist kerta he k ni 
+// unke formate match kerte he k ni 
+
 // Import Zod library for validation
 import { z } from 'zod';
 

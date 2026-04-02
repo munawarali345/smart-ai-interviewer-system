@@ -13,13 +13,13 @@ import logger from "@/server/lib/logger";
  */
 
 export async function GET( req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
 
   try {
     // Step 1: Database connect karo
     await connectDB();
-    const { id } = await params;
+    const { id } =  params;
 
     // Step 2: Validate karo - ID MongoDB ObjectId format me hai?
         if (!mongoose.Types.ObjectId.isValid(id)) {

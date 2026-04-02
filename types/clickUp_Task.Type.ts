@@ -1,0 +1,66 @@
+// ================================
+// ClickUp Task Interface
+// ================================
+
+import mongoose, { Document, Types } from "mongoose";
+
+// Subtask interface (task ke andar choti tasks)
+export interface ISubtask {
+  title: string;
+  completed: boolean;
+}
+
+// Comment interface (discussion ke liye)
+export interface IComment {
+  text: string;
+  userId: Types.ObjectId; // kis ne comment kiya
+  createdAt?: Date;
+}
+
+// Activity Log interface (system tracking)
+export interface IActivityLog {
+  action: string; // e.g. "task_created", "assigned", "status_changed"
+  performedBy: Types.ObjectId; // user ya system
+  details?: string; // extra info
+  createdAt?: Date;
+}
+
+// interface starts from here
+export interface IClickUpTask extends Document {
+    // User Reference
+    userId: mongoose.Types.ObjectId;
+
+    // task information
+    title: string;
+    description?: string;
+
+    spaceId: Types.ObjectId;
+    projectId: Types.ObjectId;
+
+    // for multiple users assign
+    assignees: Types.ObjectId[];
+
+    status: "to do" | "in progress" | "review" | "completed" | "cancelled";
+    priority?: "low" | "normal" | "high" | "urgent";
+    
+    // timing
+    dueDate?: Date;
+
+    // categorization
+    tags?: string[];
+
+    // subTasks
+    subTask: ISubtask[];
+
+    // comments
+    comments: IComment[];
+
+    // activity logs
+    activityLogs: IActivityLog[];
+
+    // system fields
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+// ends here
