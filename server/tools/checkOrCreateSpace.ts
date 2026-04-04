@@ -7,6 +7,12 @@ import logger from "../lib/logger"
 //  main tool  function check if space exists for department ni to create kro ni he to
 export const checkOrCreateSpace = async (department: string) => {
 
+          //  GUARD YAHAN LAGAO (TRY se pehle)
+    if (!department) { // agar  agent ne department empty beja ya undefine to stop krdo
+        logger.error("Department missing in tool input");
+        throw new Error("Department is required");
+    }
+        //  main work yaha se start
     try{
 
         // log info

@@ -3,9 +3,17 @@
 // imports 
 import ClickUpProjects from "../models/clickUp_Models/clickUIp_Projects";
 import logger from "../lib/logger";
+import clickUpSpace from "../models/clickUp_Models/clickUp_Space";
 
 // Tool: Check if project exists in space, else create
-export const checkOrCreateProject = async (spaceId: string, projectName: string) => {
+export const checkOrCreateProject = async (spaceId, projectName: string) => {
+
+          //  GUARD YAHAN LAGAO (TRY se pehle)
+        if (!spaceId || !projectName) { // agar  agent ne spaceId or projectId empty beja ya undefine to stop krdo
+            logger.error("SpaceId or ProjectId missing in tool input");
+            throw new Error("SpaceId or ProjectIdis required");
+        }
+
     try {
         logger.info(`Checking project "${projectName}" in space: ${spaceId}`);
 
@@ -15,13 +23,23 @@ export const checkOrCreateProject = async (spaceId: string, projectName: string)
         if (!project) {
             // Step 2: Create project if not exists
             project = await ClickUpProjects.create({ 
-                name: `Project 1`,       // friendly name
-                description: ` project 1 for space `,
+                name: projectName,       // friendly name
+                description: ` Project for ${projectName} in space `,
                 spaceId: spaceId,                           // belongs to this space
                 status: 'active',                           // default active
                 tasks: [],                                  // initially empty
                 members: []                                 // initially empty
              });
+
+            //  project creaet hu jai to space me uski id ko push kr denge take hum space k project sare get ker sake
+            // Hamesha space me push (duplicate avoid)
+            const space = await clickUpSpace.findById(spaceId);
+            // include check karta hai k project id pehle se space.projects me hai ya nahi.
+             if (space && !space.projects.includes(project._id)) {
+               space.projects.push(project._id);
+                 await space.save();
+               }
+
 
             logger.info(`Created new project "${projectName}" in space ${spaceId}`, { projectId: project._id });
 

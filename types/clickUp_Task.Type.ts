@@ -27,9 +27,7 @@ export interface IActivityLog {
 
 // interface starts from here
 export interface IClickUpTask extends Document {
-    // User Reference
-    userId: mongoose.Types.ObjectId;
-
+    
     // task information
     title: string;
     description?: string;
@@ -37,8 +35,10 @@ export interface IClickUpTask extends Document {
     spaceId: Types.ObjectId;
     projectId: Types.ObjectId;
 
-    // for multiple users assign
+    // for multiple users assign or user k ref
     assignees: Types.ObjectId[];
+
+    createdBY?: mongoose.Types.ObjectId;
 
     status: "to do" | "in progress" | "review" | "completed" | "cancelled";
     priority?: "low" | "normal" | "high" | "urgent";

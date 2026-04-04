@@ -35,7 +35,7 @@ const taskSchema: Schema<IClickUpTask> = new Schema ({
 
     projectId: {
         type: mongoose.Types.ObjectId,
-        ref: "ClickUpProject",
+        ref: "projects",
         required: [true, "Project ID required"],
         index: true
     },
@@ -45,6 +45,15 @@ const taskSchema: Schema<IClickUpTask> = new Schema ({
         type: mongoose.Types.ObjectId,
         ref: "ClickUpUser"
     }],
+
+    createdBY: {
+         type: mongoose.Types.ObjectId,
+         ref: "clickUpSystemUser"
+    },
+
+    startedAt: {
+        type: Date
+    },
 
     // status tracking
     status: {

@@ -16,9 +16,6 @@ import {IAgentInput} from "../../../types/clickUp_Agent.type";
 import { createSytemUser } from './clickUP_SystemUser';
 import { IUser } from "../../../types/clickUp_User.Type"; // Import the IUser interface from the types file
 
-import { checkOrCreateSpace } from '@/server/tools/checkOrCreateSpace';
-import { checkOrCreateProject } from '@/server/tools/checkOrCreateProject';
-
 // create task for user ka main function he isko hum user denge jo craete k kia he 
 export const createTaskForUser = async (user: IUser) => {
 
@@ -63,14 +60,6 @@ export const createTaskForUser = async (user: IUser) => {
         // ai responce k bad system user service call hugi system user create huga waha se system user ki id hame milegi 
         const systemUserId = await createSytemUser()
 
-        // ------------------------ INSERT HERE ------------------------
-       // Ensure Space exists for user.department
-        const space = await checkOrCreateSpace(user.department);
-
-     // Ensure Project exists in that Space
-        const project = await checkOrCreateProject(space.id, `${user.department} Project`);
-// ------------------------ INSERT END ------------------------
-
         //  task create ker rahe he jo groq agent responce me de raha he db me save ker rahe he 
         const task = await Task.create({
             createdBY: systemUserId,
@@ -79,13 +68,13 @@ export const createTaskForUser = async (user: IUser) => {
             status: "to do",
             priority: aiTask.priority,
             tags: aiTask.tags,
-            dueDate: aiTask.dueDate,
+            dueDate: new Date(aiTask.dueDate),
             assignees: [user._id],
-            comments: aiTask.comments,
+            comments: aiTask.initialComment.map(c => ({ ...c, userId: systemUserId, createdAt: new Date() })), // initial comments kisne kia he uski id or date  added
             subTask: aiTask.subTask,
-            activityLogs: aiTask.activityLogs,
-            SpaceId: space._id,
-            projectId: project._id
+            activityLogs: aiTask.activityLogs.map(log => ({ ...log, performedBy: systemUserId, createdAt: new Date() })),  // createdAt or performedBy added
+            spaceId: aiTask.spaceId,
+            projectId: aiTask.projectId
         
         });
 

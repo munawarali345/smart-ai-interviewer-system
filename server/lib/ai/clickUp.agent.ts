@@ -1,4 +1,8 @@
-// clickup Agent user create hute he ye agent trigger huga task create karega user k hisab se then us user ko ye task assign karega 
+// clickup Agent user create hute he ye agent trigger huga task create karega user k hisab se then us user ko ye task assign karega
+import mongoose from "mongoose";
+
+let realSpaceId;
+let realProjectId;
 
 // JSON.stringify ka format
 // JSON.stringify(value, replacer, space)
@@ -9,13 +13,19 @@ import {IAgentInput} from "../../../types/clickUp_Agent.type";
 import { checkOrCreateSpace } from "@/server/tools/checkOrCreateSpace";
 import { checkOrCreateProject } from "@/server/tools/checkOrCreateProject";
 
+// definelocal necessary types for proper typing for or messages array 
+type ChatCompletionMessageParam = {
+  role: 'system' | 'user' | 'assistant' | 'developer';
+  content: string;
+};
+
 const groqClient = client; // groq client
 
 // avalible tools map
 const tools = {
 
-    checkOrCreateSpace: checkOrCreateSpace,
-    checkOrCreateProject: checkOrCreateProject
+    "checkOrCreateSpace": checkOrCreateSpace,
+    "checkOrCreateProject": checkOrCreateProject
 
 };
 
@@ -62,11 +72,39 @@ export async function generateTask(userData: IAgentInput, today: string) {
 
         Available Tools:
          - checkOrCreateSpace(department: string): ensures space exists, returns space object
-         - checkOrCreateProject(spaceId: string, projectname: string): ensures project exists in space, returns project object
+         - checkOrCreateProject(spaceId: string, projectName: string): ensures project exists in space, returns project object
 
          To use tools, you must call them in this exact JSON format within your response:
-           {"tool_name": "checkOrCreateSpace", "parameters": {"department": "engineering"}}
-           {"tool_name": "checkOrCreateProject", "parameters": {"spaceId": "space_id_here", "projectName": "project_name"}}
+
+          -------------------------------------------------
+            TOOL INPUT RULES (CRITICAL)
+          -------------------------------------------------
+
+         When calling checkOrCreateSpace:
+          {
+            "type": "action",
+            "function": "checkOrCreateSpace",
+            "input": {
+               "department": "${userData.department}"
+                 }
+           }
+
+          When calling checkOrCreateProject:
+           {
+             "type": "action",
+             "function": "checkOrCreateProject",
+             "input": {
+             "spaceId": "<MUST come from observation>",
+             "projectName": "Onboarding Project"
+          }
+        }
+
+        STRICT RULES:
+         - NEVER send empty input {}
+         - NEVER send undefined values
+         - department is REQUIRED
+         - projectName is REQUIRED
+         - ALWAYS use department from user profile
 
         -------------------------------------------------
          CORE BEHAVIOR
@@ -221,7 +259,11 @@ export async function generateTask(userData: IAgentInput, today: string) {
                   "completed": false
                 }
               ],
-          "initialComment": "Short instruction",
+          "initialComment":  [
+                {
+                  "text": "Short instruction"
+                }
+               ],
           "activityLogs": [
                 {
                    "action": "task_created",
@@ -235,7 +277,11 @@ export async function generateTask(userData: IAgentInput, today: string) {
                    "action": "comment_added",
                     "details": "Initial comment added"
                 }
-             ]
+             ],
+
+             "spaceId": "space_id_from_tool",
+             "projectId": "project_id_from_tool",
+
             }
           }
 
@@ -244,26 +290,25 @@ export async function generateTask(userData: IAgentInput, today: string) {
         -------------------------------------------------
 
         START
-         { "type": "system", "data": { "user": "Frontend Intern" } }
+         { "type": "system", "data": { "user": "Frontend Intern", "department": "engineering", "role": "developer", "skills": ["React"], "experienceLevel": "intern" } }
 
         PLAN
-         { "type": "plan", "data": { "step": "Ensure Space exists" } }
+         { "type": "plan", "data": { "step": "Check department and ensure space exists" } 
 
         ACTION
          {
            "type": "action",
            "function": "checkOrCreateSpace",
            "input": {
-             "spaceName": "Engineering",
-              "department": "Engineering"
+             "department": "engineering"
               }
          }
 
         OBSERVATION
-         { "type": "observation", "data": { "spaceId": "abc123" } }
+         { "type": "observation", "observation": { "spaceId": "970123" } }
 
         PLAN
-         { "type": "plan", "data": { "step": "Ensure Project exists" } }
+         { "type": "plan", "data": { "step": "Ensure Project exists in the space" } }
 
         ACTION
          {
@@ -276,15 +321,15 @@ export async function generateTask(userData: IAgentInput, today: string) {
         }
 
         OBSERVATION
-          { "type": "observation", "data": { "projectId": "xyz789" } }
+          { "type": "observation", "observation": { "projectId": "78909" } }
 
         PLAN
-          { "type": "plan", "data": { "step": "Generate onboarding task" } }
+          { "type": "plan", "data": { "step": "Generate onboarding task based on user details" } }
 
         OUTPUT
           {
            "type": "output",
-               {
+              "data": {
                    "title": "Setup Frontend Project",
                    "description": "Initialize project using Vite",
                    "priority": "normal",
@@ -295,12 +340,26 @@ export async function generateTask(userData: IAgentInput, today: string) {
                      "subTask": [
                          { "title": "Install Vite", "completed": false }
                             ],
-                    "Comments": "Start with project setup.",
+                      "initialComment":  [
+                         {
+                            "text": "Short instruction"
+                         }
+                        ],
                       "activityLogs": [
                           { "action": "task_created", "details": "Task created by AI" }
                             ]
+                          "spaceId": "abc123",
+                         "projectId": "xyz789"
                           }
 
+        CRITICAL RULE:
+
+         - NEVER generate fake IDs
+         - NEVER create your own IDs
+         - ALWAYS reuse IDs returned from tools
+         - spaceId and projectId MUST come from tool observation
+         
+                 
         -------------------------------------------------
          IMPORTANT RULES
         -------------------------------------------------
@@ -309,6 +368,8 @@ export async function generateTask(userData: IAgentInput, today: string) {
          - DO NOT add markdown
          - OUTPUT MUST BE PURE JSON ONLY
          - ALWAYS follow onboarding-first rule
+         - Remember the spaceId and projectId from observations, and include them in the final task output. Do not output plans or actions in the final response.
+         - In the final task output, use the spaceId and projectId from the last observation exactly.
     `;
 
     // step 2 userMessage
@@ -322,37 +383,112 @@ export async function generateTask(userData: IAgentInput, today: string) {
         Return only JSON output.
     `;
 
-    // step 3 geoq client call/ LLM call 
-    const completion = await groqClient.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
-        temperature: 0.1,
-        messages: [
+    // step 3: messages ka array bange ye ek tra ki histroy/memory ka kam karega
+    // is me hum jub tools call huke hame cheezn milnge hum observation ko result milega push kar denge messages me
+     const messages: ChatCompletionMessageParam[] = [ // (properly typed)
 
-            {role: 'system', content: systemPrompt },
-            {role: 'user', content: userMessage },
-        ]
+          {role: 'system', content: systemPrompt }, // System prompt add core brain (rules, example)
+          {role: 'user', content: userMessage }, // User query add (initial)
+     ];
+
+    // step 4 infinate loop - jub tak output na mile, continue
+    while (true) {
+
+      // step 5 geoq client call/ LLM call with current messages
+    const chat = await groqClient.chat.completions.create({
+
+        model: 'moonshotai/kimi-k2-instruct',
+        temperature: 0.1,
+        messages: messages,  // updated messages yaha push hute rehange(histroy include)
+        response_format: {type: 'json_object'}
 
     }, {
-         timeout: 10000 // 10 seconds timeout - if AI takes longer, request will fail
+
+         timeout: 20000 // 20 seconds timeout - if AI takes longer, request will fail
+
     });
 
-    // step 4 ai ka responce nikalenge usko json me parse karenge
-     const rawContent = completion.choices[0]?.message?.content;
-    console.log("Raw AI response:", rawContent);
+    // step 6 ai ka responce nikalenge usko json me parse karenge
+     const result = chat.choices[0]?.message?.content;
+
+     // result ko messages me add/push ker denge
+     messages.push ({ role: 'assistant', content: result as string });  // AI response messages me add
+
+    console.log("Raw AI response:", result);
     
-    if (!rawContent) throw new Error("No response from AI");
+    if (!result) throw new Error("No response from AI");  // Error if no response
     
-    
-    let result;
-try {
-    result = JSON.parse(rawContent);
-} catch {
-    // Agar invalid chars aayen ya extra text, sirf JSON part extract karo
-    const startIdx = rawContent.indexOf("{");
-    const endIdx = rawContent.lastIndexOf("}");
-    result = JSON.parse(rawContent.substring(startIdx, endIdx + 1));
+   const response = JSON.parse(result)
+//     let response; // Response parse karne ke liye
+
+//    // Sab JSON match karo
+// const matches = [...result.matchAll(/\{[\s\S]*?\}/g)];
+// if (matches.length === 0) continue;
+
+// // Last JSON (output) lo
+// const lastMatch = matches[matches.length - 1];
+// try {
+//     response = JSON.parse(lastMatch[0]);
+// } catch (parseError) {
+//     console.error("JSON parse error:", parseError);
+//     continue;
+// }
+
+if (response.title) {
+  return response;
 }
 
-   return result;
+  // ab hum yaha se hamre step nikalneg action observation anad output
+  // step 1 agar responce ka type action he AI ne tool call kia 
+  if( response.type === 'action') {
+    const fn = tools[response.function]  // yaha hum function call karenge tools map se ek cheez nikal k lao which is response.funtion wo functin lega 
+
+  if (!fn) throw new Error(`Tool ${response.function} not found`);
+
+    let observation;
+    if (response.function === "checkOrCreateSpace") {
+        // department string extract karke pass kare
+        observation = await fn(response.input.department);
+        realSpaceId = observation._id; // space ki observation se extract ker di 
+    } else if (response.function === "checkOrCreateProject") {
+        // project tool me spaceId + projectName chahiye
+        observation = await fn(realSpaceId, response.input.projectName);
+        realProjectId = observation._id; // project id set
+        
+    } else {
+        // future tools ke liye generic fallback
+        observation = await fn(response.input);
+    }
+
+    const obs = { "type": "observation", "observation": observation };
+    messages.push({role: "developer", content: JSON.stringify(obs)});
+    console.log("Observation sent:", obs);
+
+    continue; // Next iteration
+
+} else if (response.type === 'output' ) {
+    console.log("Agent returning task:", response.data);
+    // // space real id 
+    // realSpaceId;
+    // // or ye real projectId
+    // realProjectId;
+    return response.data;
 }
+
+   }
+
+  }
+   
+ 
+
+
+
+
 // ends here
+
+
+// yaha hum kia kar raha he hum auto propmting nker raha he
+//  means user ne hame jese koi message diya  to hum auto prompting ker raha he 
+// jub tak hame output ni mil jata he 
+// jub tak hame action milta rahe ga hum us function ko call kar raha he 
+// hum observation ko wapis dal rahe he
