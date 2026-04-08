@@ -10,11 +10,16 @@
 
 // imports
 import Task from '@/server/models/clickUp_Models/clickUp_Task';
+import projects from '@/server/models/clickUp_Models/clickUIp_Projects'
+import ClickUpSpace from "@/server/models/clickUp_Models/clickUp_Space";
 import logger from '@/server/lib/logger';
 import { generateTask } from '@/server/lib/ai/clickUp.agent';
 import {IAgentInput} from "../../../types/clickUp_Agent.type";
 import { createSytemUser } from './clickUP_SystemUser';
 import { IUser } from "../../../types/clickUp_User.Type"; // Import the IUser interface from the types file
+
+
+
 
 // create task for user ka main function he isko hum user denge jo craete k kia he 
 export const createTaskForUser = async (user: IUser) => {
@@ -77,6 +82,46 @@ export const createTaskForUser = async (user: IUser) => {
             projectId: aiTask.projectId
         
         });
+
+        // task create hune k bad hum task ko or membes array ko project model me update karenge
+        // Task ke through uska related project nikaal rahe hain
+        // task is project se related he
+        const project = await projects.findById(task.projectId);
+
+        if (project) { // agar project mil gaya
+
+        // Check: kya ye task already project ke tasks array me hai?
+        if (!project.tasks.includes(task._id)) {
+        // nahi hai to task ki ID project ke tasks array me add kar do
+          project.tasks.push(task._id);
+        }
+
+       // Check: kya user already project ka member hai?
+       if (!project.members.includes(user._id)) {
+       // nahi hai to user ki ID members array me add kar do
+        project.members.push(user._id);
+       }
+
+       // Jo changes kiye (task + member add), unko DB me save karo
+      await project.save();
+
+      }
+
+
+      // Ab task ke through uska related space nikaal rahe hain
+       // task is space  se related he
+     const space = await ClickUpSpace.findById(task.spaceId);
+
+     // Check: space exist karta hai AND user already member nahi hai
+     if (space && !space.members.includes(user._id)) {
+
+     // user ko space ke members array me add kar do
+      space.members.push(user._id);
+
+    // changes DB me save karo
+     await space.save();
+
+    }
 
         logger.info('task generated successfully', {taskIs: task._id});
         return task;

@@ -358,6 +358,7 @@ export async function generateTask(userData: IAgentInput, today: string) {
          - NEVER create your own IDs
          - ALWAYS reuse IDs returned from tools
          - spaceId and projectId MUST come from tool observation
+         - You MUST call checkOrCreateSpace tool first with the department. Then call checkOrCreateProject tool with the spaceId from observation. Only then generate the task. If you skip tools, the task will fail.
          
                  
         -------------------------------------------------
@@ -404,7 +405,7 @@ export async function generateTask(userData: IAgentInput, today: string) {
 
     }, {
 
-         timeout: 20000 // 20 seconds timeout - if AI takes longer, request will fail
+         timeout: 10000 // 20 seconds timeout - if AI takes longer, request will fail
 
     });
 
@@ -419,22 +420,10 @@ export async function generateTask(userData: IAgentInput, today: string) {
     if (!result) throw new Error("No response from AI");  // Error if no response
     
    const response = JSON.parse(result)
-//     let response; // Response parse karne ke liye
 
-//    // Sab JSON match karo
-// const matches = [...result.matchAll(/\{[\s\S]*?\}/g)];
-// if (matches.length === 0) continue;
-
-// // Last JSON (output) lo
-// const lastMatch = matches[matches.length - 1];
-// try {
-//     response = JSON.parse(lastMatch[0]);
-// } catch (parseError) {
-//     console.error("JSON parse error:", parseError);
-//     continue;
-// }
-
+       
 if (response.title) {
+
   return response;
 }
 
@@ -468,21 +457,13 @@ if (response.title) {
 
 } else if (response.type === 'output' ) {
     console.log("Agent returning task:", response.data);
-    // // space real id 
-    // realSpaceId;
-    // // or ye real projectId
-    // realProjectId;
+
     return response.data;
 }
 
    }
 
   }
-   
- 
-
-
-
 
 // ends here
 

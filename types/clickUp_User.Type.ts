@@ -19,3 +19,6 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// frontend me user creating form k liye jo need feilds he wo nikal rehe he 
+export type IUserPayload = Omit<IUser, "createdAt" | "updatedAt" | "_id">;
