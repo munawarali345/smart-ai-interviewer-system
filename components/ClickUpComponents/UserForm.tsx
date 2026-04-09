@@ -9,11 +9,12 @@ import { Input } from "@/components/ui/input";
 import { User } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation"; // Router import
+import { Roles } from "../../types/clickUp_User.Type"; // role emun alag se 
 
 interface userFormData {
   name: string;
   email: string;
-  role: string;
+  role: Roles; // role enum
   department: string;
   skills: string[]; // Array
   experienceLevel: string;
@@ -122,11 +123,17 @@ export default function UserForm() {
           className="w-full p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         >
-          <option value="" disabled>Select Role</option>
-          <option value="developer">Developer</option>
-          <option value="tester">Tester</option>
-          <option value="manager">Manager</option>
-          <option value="designer">Designer</option>
+           <option value="" disabled>Select Role</option>
+           <option value="frontend">Frontend</option>
+           <option value="backend">Backend</option>
+           <option value="fullstack">Fullstack</option>
+           <option value="mobile_developer">Mobile Developer</option>
+           <option value="tester">Tester</option>
+           <option value="automation_tester">Automation Tester</option>
+           <option value="designer">Designer</option>
+           <option value="content_creator">Content Creator</option>
+           <option value="marketing">Marketing</option>
+           
         </select>
 
         {/* Department Select */}

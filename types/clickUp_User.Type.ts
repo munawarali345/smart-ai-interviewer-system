@@ -4,6 +4,19 @@ import { Document } from "mongoose";
 // mongoose se Document interface import kar rahe hain
 // ================================
 
+// role enum
+export enum Roles {
+  FRONTEND = "frontend",
+  BACKEND = "backend",
+  FULLSTACK = "fullstack",
+  MOBILE = "mobile_developer",
+  TESTER = "tester",
+  AUTOMATION_TESTER = "automation_tester",
+  DESIGNER = "designer",
+  CONTENT_CREATOR = "content_creator",
+  MARKETING = "marketing",
+}
+
 // clickup user interface
 export interface IUser extends Document {
   // Basic Information
@@ -11,7 +24,7 @@ export interface IUser extends Document {
   email: string;
 
     // Professional Information
-  role: "developer" | "tester" | "manager" | "designer";
+  role: Roles,
   department:"engineering" | "qa" | "production" | "design" | "hr" | "marketing";
   skills: string[];
   experienceLevel?: "junior" | "mid" | "senior" | "intern";
@@ -19,6 +32,3 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
-
-// frontend me user creating form k liye jo need feilds he wo nikal rehe he 
-export type IUserPayload = Omit<IUser, "createdAt" | "updatedAt" | "_id">;

@@ -27,8 +27,9 @@ export const createTaskForUser = async (user: IUser) => {
     try{
 
         // step 1 check karenge k koi task pehle se active to ni he 
+        // $in use kia he kun ki hum array me userId dhondh rahe he 
         const existingTask = await Task.findOne({
-            userId: user._id,
+            assignees: {$in: [user._id]},// ye assignees arry me chaeck karega userId
             // wo task lao jinka status completed nahi he 
             status: {$ne: "completed"} // $ne ye mongodb ka opertator he means not equal to
         });
@@ -48,6 +49,8 @@ export const createTaskForUser = async (user: IUser) => {
 
         // prepare Ai input user me se jo needed fields he wai nikal ker ai ko denge
         const userData: IAgentInput = {
+
+            _id: user._id,
             name: user.name,
             role: user.role,
             skills: user.skills,
@@ -65,6 +68,46 @@ export const createTaskForUser = async (user: IUser) => {
         // ai responce k bad system user service call hugi system user create huga waha se system user ki id hame milegi 
         const systemUserId = await createSytemUser()
 
+        // ye tab kam karega jub same task multiple user ko assisgn huga jese interns ko pahse 1 k tasks
+        if (aiTask.reuse) { // agar ai responce me reuse true he to (flag)
+
+           return aiTask.task; //existing task object return 
+
+         };
+
+
+         // Helper function for existing task: Project aur space relations update karne ke liye 
+         const updateRelations = async (task: any, userId) => {
+
+            // Project find karo aur update karo
+           const project = await projects.findById(task.projectId);
+
+        if (project) {
+
+            // Task add karo agar nahi hai project model k tasks array me 
+        if (!project.tasks.includes(task._id)) 
+            project.tasks.push(task._id);
+            
+            // User add karo agar nahi hai project model k memebers array me 
+        if (!project.members.includes(userId)) 
+            project.members.push(userId);
+
+             await project.save(); // db me save
+         }
+
+         // Space find karo aur update karo
+         const space = await ClickUpSpace.findById(task._spaceId);
+
+       if (space && !space.members.includes(userId)) {
+
+         // User add karo
+            space.members.push(userId);
+
+               await space.save(); // Save karo
+         }
+      };
+
+        
         //  task create ker rahe he jo groq agent responce me de raha he db me save ker rahe he 
         const task = await Task.create({
             createdBY: systemUserId,
@@ -79,49 +122,18 @@ export const createTaskForUser = async (user: IUser) => {
             subTask: aiTask.subTask,
             activityLogs: aiTask.activityLogs.map(log => ({ ...log, performedBy: systemUserId, createdAt: new Date() })),  // createdAt or performedBy added
             spaceId: aiTask.spaceId,
-            projectId: aiTask.projectId
-        
+            projectId: aiTask.projectId,
+            phase: aiTask.phase,  // Add: AI response se phase lo
+            phaseOrder: aiTask.phaseOrder,  // Add: AI response se phaseOrder lo
+            taskKey: aiTask.taskKey,  // Add: AI response se taskKey lo
+
         });
 
         // task create hune k bad hum task ko or membes array ko project model me update karenge
         // Task ke through uska related project nikaal rahe hain
         // task is project se related he
-        const project = await projects.findById(task.projectId);
-
-        if (project) { // agar project mil gaya
-
-        // Check: kya ye task already project ke tasks array me hai?
-        if (!project.tasks.includes(task._id)) {
-        // nahi hai to task ki ID project ke tasks array me add kar do
-          project.tasks.push(task._id);
-        }
-
-       // Check: kya user already project ka member hai?
-       if (!project.members.includes(user._id)) {
-       // nahi hai to user ki ID members array me add kar do
-        project.members.push(user._id);
-       }
-
-       // Jo changes kiye (task + member add), unko DB me save karo
-      await project.save();
-
-      }
-
-
-      // Ab task ke through uska related space nikaal rahe hain
-       // task is space  se related he
-     const space = await ClickUpSpace.findById(task.spaceId);
-
-     // Check: space exist karta hai AND user already member nahi hai
-     if (space && !space.members.includes(user._id)) {
-
-     // user ko space ke members array me add kar do
-      space.members.push(user._id);
-
-    // changes DB me save karo
-     await space.save();
-
-    }
+         await updateRelations(task, user._id); // function call relations update
+         
 
         logger.info('task generated successfully', {taskIs: task._id});
         return task;
@@ -132,6 +144,6 @@ export const createTaskForUser = async (user: IUser) => {
             stack: error.stack
         });
          
-        throw new Error("field to create task")
+        throw new Error("failed to create task")
     }
 };

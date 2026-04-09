@@ -12,6 +12,7 @@ import {IAgentInput} from "../../../types/clickUp_Agent.type";
 // import tools
 import { checkOrCreateSpace } from "@/server/tools/checkOrCreateSpace";
 import { checkOrCreateProject } from "@/server/tools/checkOrCreateProject";
+import { checkExistingTask } from "@/server/tools/checkExistingTask";
 
 // definelocal necessary types for proper typing for or messages array 
 type ChatCompletionMessageParam = {
@@ -25,7 +26,8 @@ const groqClient = client; // groq client
 const tools = {
 
     "checkOrCreateSpace": checkOrCreateSpace,
-    "checkOrCreateProject": checkOrCreateProject
+    "checkOrCreateProject": checkOrCreateProject,
+    "checkExistingTask": checkExistingTask
 
 };
 
@@ -70,9 +72,37 @@ export async function generateTask(userData: IAgentInput, today: string) {
          - Ensure a Project exists inside that Space
          - Then generate the Task
 
+        Phase-wise Task Generation Rules (IMPORTANT):
+         - Phase 1: Onboarding
+         - Phase 2: Skills
+         - Phase 3: Real Tasks
+
+        Experience-level phase skipping:
+          - Intern: Phase 1 → Phase 2 → Phase 3
+          - Junior: Phase 2 → Phase 3 (skip Phase 1)
+          - Mid: Phase 2 → Phase 3 (skip Phase 1)
+          - Senior: Phase 3 only (skip Phase 1 & 2)
+
+        Task Reuse Rules:
+          - Onboarding tasks are reusable for multiple users in the same role/department
+          - Skills and Real tasks are unique per user
+          - taskKey should be consistent to allow reuse (especially for onboarding)
+
+        PhaseOrder:
+          - Phase 1 → 1
+          - Phase 2 → 2
+          - Phase 3 → 3
+
+        Project Names Based on Phase:
+          - Phase 1: 'Onboarding Project'
+          - Phase 2: 'Skills Development Project'
+          - Phase 3: 'Production Tasks Project'
+
+
         Available Tools:
          - checkOrCreateSpace(department: string): ensures space exists, returns space object
          - checkOrCreateProject(spaceId: string, projectName: string): ensures project exists in space, returns project object
+         - checkExistingTask(taskKey: string, phase: string): checks if a reusable task exists, returns task object if found or null
 
          To use tools, you must call them in this exact JSON format within your response:
 
@@ -95,7 +125,17 @@ export async function generateTask(userData: IAgentInput, today: string) {
              "function": "checkOrCreateProject",
              "input": {
              "spaceId": "<MUST come from observation>",
-             "projectName": "Onboarding Project"
+             "projectName": "<BASED ON PHASE: Onboarding Project for Phase 1, Skills Development Project for Phase 2, Production Tasks Project for Phase 3>"
+          }
+        }
+
+          When calling checkExistingTask:
+           {
+             "type": "action",
+             "function": "checkExistingTask",
+             "input": {
+             "taskKey": "<GENERATED BASED ON FORMAT, e.g., 'onboarding_setup_frontend'>",
+             "phase": "onboarding | skills | real"
           }
         }
 
@@ -106,80 +146,82 @@ export async function generateTask(userData: IAgentInput, today: string) {
          - projectName is REQUIRED
          - ALWAYS use department from user profile
 
+
+        -------------------------------------------------
+         PHASE DETERMINATION
+        -------------------------------------------------
+        Agent must check user's completed tasks via external check (e.g., database query for user's task history).
+        - If intern and no onboarding tasks completed, start Phase 1.
+        - If junior/mid and no skills tasks completed, start Phase 2.
+        - If senior, start Phase 3.
+        - Only generate next phase after previous phase tasks are completed by the user.
+
         -------------------------------------------------
          CORE BEHAVIOR
         -------------------------------------------------
 
-        1. ALWAYS generate ONBOARDING TASKS for new users first
-         - onboarding is mandatory for every user
-         - onboarding is independent of role or experience level
-         - onboarding = system introduction + setup + understanding
+         1. ALWAYS generate tasks phase-wise based on experience level (as above)
+         - Onboarding is mandatory for new interns only
+         - Skills phase tasks assigned based on role + skills
+         - Real phase tasks are full production-level tasks based on experience level
 
-        2. AFTER ONBOARDING CONTEXT:
-         - generate tasks strictly based on role + skills + experience level
-         - tasks must feel like real company Jira/ClickUp tickets
-
-        3. TASKS MUST BE REALISTIC:
+        2. TASKS MUST BE REALISTIC:
          - must represent real company engineering work
          - no generic tasks like "learn system"
          - must be actionable, technical and assignable
+
+        3. For Reusable Tasks (Onboarding):
+         - First, call checkExistingTask with generated taskKey.
+         - If task exists (observation returns task), reuse it (assign to new user without creating new).
+         - If null, proceed to generate new task.
+          For Unique Tasks (Skills/Real): Skip check, always generate new.
 
         -------------------------------------------------
         EXPERIENCE LEVEL RULES
         -------------------------------------------------
 
         If Intern:
-         - simple guided tasks
-         - setup, small bug fixes, basic learning implementation
+         - Phase 1 onboarding → simple guided tasks, setup, small bug fixes, basic learning implementation
+         - Phase 2 skills → small bug fixes, learning implementations
+         - Phase 3 real → small feature development
 
         If Junior:
-         - small feature development
-         - API integration/API Work
-         - bug fixing
+         - Phase 1 skipped
+         - Phase 2 skills → small feature development/API integration Work
+         - Phase 3 real → full task execution
 
-        Is Mid:
-         - full feature implementation/Development
-         - system integration tasks
+        If Mid:
+         - Phase 1 skipped
+         - Phase 2 skills → full feature implementation/system integration
+         - Phase 3 real → complex feature modules
 
         If Senior:
-         - system Design 
-         - architecture design
-         - system optimization
-         - complex modules
-
+        - Phase 1 & 2 skipped
+        - Phase 3 real → system design/architecture design/system optimization/complex modules
+       
         -------------------------------------------------
          ONBOARDING RULES (VERY IMPORTANT)
         -------------------------------------------------
 
-        If user is new:
-        You MUST assign onboarding tasks first such as:
-         - environment setup
-         - project structure understanding
-         - repo understanding
-         - repository setup
-         - system overview
-         - first simple contribution
-
+        - Onboarding tasks for interns: environment setup, project structure understanding, repo understanding, repository setup, system overview, first simple contribution
+        - Onboarding tasks are reusable across users in same role/department
+        - Skills & Real tasks are unique per user
          Onboarding tasks must be simple but realistic.
 
         -------------------------------------------------
          DUE DATE RULES
         -------------------------------------------------
         
-        You MUST generate a realistic due date based on task complexity.
-        you must generate dueDate based on current system date
+         You MUST generate a realistic due date based on task complexity.
+        Current system date: ${today}
 
-        CURRENT SYSTEM DATE: ${today}
+        Due dates based on phase (adjusted by experience):
 
-        This is the ONLY valid reference date.
-        All due dates must be calculated from this date.
+         - Phase 1 onboarding → 1–2 days from today
 
-        rules:
-         - onboarding tasks → 1–2 days from today
-         - intern tasks → 2–3 days from today
-         - junior tasks → 2–4 days from today
-         - mid tasks → 3–6 days from today
-         - senior tasks → 5–10 days from today
+         - Phase 2 skills → 2–4 days from today
+         
+         - Phase 3 real → 3–10 days from today (e.g., intern: 2-3 days, junior: 2-4 days, mid: 3-6 days, senior: 5-10 days)
 
         strict rules:
         - never generatepast dates
@@ -202,6 +244,7 @@ export async function generateTask(userData: IAgentInput, today: string) {
          - small/simple tasks → 3-5 subtasks
          - medium tasks → 5-7 subtasks
          - large/complex tasks → 7+ subtasks
+         Must align with main task and follow real development workflow
 
         Rules:
          - must be actionable steps
@@ -238,6 +281,14 @@ export async function generateTask(userData: IAgentInput, today: string) {
          - Must be assignable in sprint planning
          - Must include technical context where needed
          - Must be specific and not abstract
+
+        -------------------------------------------------
+         TASK KEY RULES
+        -------------------------------------------------
+        taskKey Format:
+         - Onboarding: 'onboarding_{task_type}_{role}' (reusable, e.g., 'onboarding_setup_frontend')
+         - Skills: 'skills_{feature}_{userId}' (unique, e.g., 'skills_react_feature_user123')
+         - Real: 'real_{task}_{userId}' (unique, e.g., 'real_api_optimization_user123')
 
         -------------------------------------------------
          OUTPUT FORMAT (STRICT JSON ONLY)
@@ -281,6 +332,9 @@ export async function generateTask(userData: IAgentInput, today: string) {
 
              "spaceId": "space_id_from_tool",
              "projectId": "project_id_from_tool",
+             "phase": "onboarding | skills | real",
+             "phaseOrder": 1 | 2 | 3,
+             "taskKey": "string_for_reuse_or_unique"
 
             }
           }
@@ -315,7 +369,7 @@ export async function generateTask(userData: IAgentInput, today: string) {
           "type": "action",
           "function": "checkOrCreateProject",
           "input": {
-          "projectName": "Project 1",
+          "projectName": "Onboarding Project",
           "spaceId": "abc123"
           }
         }
@@ -324,7 +378,23 @@ export async function generateTask(userData: IAgentInput, today: string) {
           { "type": "observation", "observation": { "projectId": "78909" } }
 
         PLAN
-          { "type": "plan", "data": { "step": "Generate onboarding task based on user details" } }
+          { "type": "plan", "data": { "step": "Check if onboarding task exists for reuse" } }
+
+        ACTION
+          {
+            "type": "action",
+            "function": "checkExistingTask",
+            "input": { "taskKey": "onboarding_setup_frontend", "phase": "onboarding" }
+          }
+
+        OBSERVATION
+          { "type": "observation", "observation": { "task": { "id": "existing_task_id", ... } } }  // If exists, reuse
+
+        PLAN
+          { "type": "plan", "data": { "step": "Reuse existing task or generate new if not found" } }
+
+        PLAN
+          { "type": "plan", "data": { "step": "Generate onboarding task for intern Phase 1" } }
 
         OUTPUT
           {
@@ -348,14 +418,22 @@ export async function generateTask(userData: IAgentInput, today: string) {
                       "activityLogs": [
                           { "action": "task_created", "details": "Task created by AI" }
                             ]
-                          "spaceId": "abc123",
-                         "projectId": "xyz789"
+                         "spaceId": "abc123",
+                         "projectId": "xyz789",
+                         "phase": "onboarding",
+                         "phaseOrder": 1,
+                         "taskKey": "onboarding_setup_frontend"
                           }
 
         CRITICAL RULE:
 
          - NEVER generate fake IDs
          - NEVER create your own IDs
+          - Phase assignment must respect experience-level skipping rules
+          - Onboarding tasks can be reused for multiple interns in same department/role
+          - Skills & Real tasks are unique per user
+          - taskKey and phaseOrder must be consistent
+          - Ensure phaseOrder matches phase (1=onboarding, 2=skills, 3=real)
          - ALWAYS reuse IDs returned from tools
          - spaceId and projectId MUST come from tool observation
          - You MUST call checkOrCreateSpace tool first with the department. Then call checkOrCreateProject tool with the spaceId from observation. Only then generate the task. If you skip tools, the task will fail.
@@ -436,18 +514,50 @@ if (response.title) {
 
     let observation;
     if (response.function === "checkOrCreateSpace") {
-        // department string extract karke pass kare
+
+        // department string extract karke pass kare/ Input se department lo
         observation = await fn(response.input.department);
-        realSpaceId = observation._id; // space ki observation se extract ker di 
+        realSpaceId = observation._id; // space ki observation se extract ker di/ids globel variable me save
+
     } else if (response.function === "checkOrCreateProject") {
-        // project tool me spaceId + projectName chahiye
+
+        // project tool me spaceId + projectName chahiye/// SpaceId global se lo, projectName input se
         observation = await fn(realSpaceId, response.input.projectName);
-        realProjectId = observation._id; // project id set
+        realProjectId = observation._id; // project id set/ids globel variable me save
         
-    } else {
+        // ye check tool he, jo existing task ko dhondhta he  resuse ke liye
+    } else if (response.function === "checkExistingTask") {  
+
+       // Input se taskKey, phase, department, role lo
+       observation = await fn(response.input.taskKey, response.input.phase);
+
+       // Agar task mila (observation not null)
+       if (observation) {
+
+          // Observation se data lo: existing task object (jisme spaceId, projectId, assignees already hain)
+          // pehle check karenge k kahi current user ki _id pehle se array me he ya ni 
+          // agar ni mile to push krdo 
+          if (!observation.assignees.includes(userData._id)) {
+
+            observation.assignees.push(userData._id); // User ko assign karo (new add karo)
+
+            await observation.save();  // DB update karo
+
+            } 
+            
+               return {
+                    reuse: true, // flag
+                    observation
+               } ; // loop break task mil gya us me humne user id assignees me push kardi direct return baki step ni cahelnge ab    
+   
+       }
+
+
+    }  else {
         // future tools ke liye generic fallback
         observation = await fn(response.input);
     }
+
 
     const obs = { "type": "observation", "observation": observation };
     messages.push({role: "developer", content: JSON.stringify(obs)});

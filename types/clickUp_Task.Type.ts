@@ -15,7 +15,7 @@ export interface IComment {
   text: string;
   userId: Types.ObjectId; // kis ne comment kiya
   createdAt?: Date;
-}
+} 
 
 // Activity Log interface (system tracking)
 export interface IActivityLog {
@@ -34,6 +34,11 @@ export interface IClickUpTask extends Document {
 
     spaceId: Types.ObjectId;
     projectId: Types.ObjectId;
+
+   taskKey: string;          // Unique key for reusable/standard task
+   phase: "onboarding" | "Skills" | "real";  // onboarding, practice, real
+   phaseOrder: number;        // onboarding=1, practice=2, real=3
+
 
     // for multiple users assign or user k ref
     assignees: Types.ObjectId[];

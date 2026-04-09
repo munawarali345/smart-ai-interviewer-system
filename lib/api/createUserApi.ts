@@ -2,14 +2,14 @@
 //  POST Req
 
 // imports
-
+ import { Roles } from "../../types/clickUp_User.Type"; // role emun alag se 
 import API_URL from "@/config/api";
 
 // interface
 interface UserFormData {
   name: string;
   email: string;
-  role: string;
+  role: Roles; // role enum
   department: string;
   skills: string[]; // Array
   experienceLevel: string;

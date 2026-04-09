@@ -40,6 +40,19 @@ const taskSchema: Schema<IClickUpTask> = new Schema ({
         index: true
     },
 
+    taskKey: { type: String, required: true, unique: true },
+
+      // Phase system fields
+    phase: {
+       type: String,
+       enum: ["onboarding", "skills", "real"],
+       required: true
+    },
+
+    phaseOrder: { type: Number, required: true, min: 1, max: 3 },
+
+   
+
     // main assignment of users
     assignees: [{
         type: mongoose.Types.ObjectId,
@@ -143,7 +156,7 @@ const taskSchema: Schema<IClickUpTask> = new Schema ({
 // ends here 
 
 //indexes for performance starts from here
-taskSchema.index({userId: 1, createdAt: -1}); //users tasks by creation date
+taskSchema.index({assignees: 1, createdAt: -1}); //users tasks by creation date
 
 taskSchema.index({status: 1, dueDate: 1}); // tasks by status and due date
 

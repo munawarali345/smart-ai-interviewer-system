@@ -22,7 +22,7 @@ export const createUserSchema = z.object({
          .toLowerCase()
          .trim(), 
          
-    role: z.enum(['developer', 'tester', 'manager', 'designer'], {
+    role: z.enum(['frontend', 'backend', 'fullstack', 'mobile_developer', 'tester', 'automation_tester', 'designer', 'content_creator', 'marketing'], {
          message: 'Role must be one of: developer, tester, manager, designer' //  Custom error message deta hai (better UX)
        }),
 

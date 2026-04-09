@@ -7,7 +7,7 @@
 
 // imports
 import mongoose, { Schema } from "mongoose";
-import { IUser } from "../../../types/clickUp_User.Type"; // Import the IUser interface from the types file
+import { IUser, Roles } from "../../../types/clickUp_User.Type"; // Import the IUser interface from the types file
 
 
 // clickUp user Schema
@@ -31,10 +31,7 @@ const userSchema: Schema<IUser> = new Schema ({
     role: {
         type: String,
         required: [true, 'role is required'],
-        enum: {
-            values : ['developer', 'tester', 'manager', 'designer'],
-             message: 'Role must be one of: developer, tester, manager, designer'
-        }
+        enum: Object.values(Roles)
     },
 
     department: {
