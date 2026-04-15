@@ -72,8 +72,10 @@ export default function UserForm() {
         // user creating api call 
       const result = await createUser(formData);
       if (result.success) {
+
         toast.success(result.message);
-        router.replace("/clickup/dashboard"); // Redirect to dashboard
+        
+          router.replace(`/clickup/dashboard?userId=${result.data._id}`);  // Redirect to dashboard with userId
       } else {
         toast.error(result.message);
       }

@@ -1,26 +1,34 @@
 // main clickUp Dashboard page
 
-// imports
-import Link from "next/link";
+"use client";  // Client component
 
-// main function 
-export default function ClickUpDashboard () {
+import { useUserStore } from "@/lib/stores/userStore";  // user store
 
-    // jsx ui work
-    return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <header className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-slate-900">ClickUp WorkSpace</h1>
-              <Link href="/clickup/createUser" className="bg-blue-600 text-white  px-4 py-2 rounded-lg hover:bg-blue-700">
-                  Create User
-              </Link>
-        </div>
-      </header>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-        <h2 className="text-4xl font-bold text-slate-900">Welcome to ClickUp</h2>
-        <p>Your AI-powered task management system.</p>
+
+export default function ClickUpDashboard() {  // Component start
+ 
+  // Store se access karo, local state remove
+  const { loading, error} = useUserStore();
+
+
+  if (loading) return <p>Loading...</p>;  // Loading UI
+  if (error) return <p>Error: {error}</p>;  // Error display
+
+
+  return (  // Main render
+
+    <div className="min-h-screen">  {/* Outer container */}
+
+      <div className="flex flex-1">  {/* Flex for sidebar + main, below header */}
+
+        <main className="flex-1 bg-gradient-to-br from-slate-50 to-slate-100 p-8">  {/* Right main, padding add */}
+         
+        </main>
+
       </div>
-    </main>
+
+    </div>
+
   );
+
 }

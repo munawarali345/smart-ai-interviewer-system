@@ -68,16 +68,38 @@ export const createTaskForUser = async (user: IUser) => {
         // ai responce k bad system user service call hugi system user create huga waha se system user ki id hame milegi 
         const systemUserId = await createSytemUser()
 
-        // ye tab kam karega jub same task multiple user ko assisgn huga jese interns ko pahse 1 k tasks
-        if (aiTask.reuse) { // agar ai responce me reuse true he to (flag)
+        // REUSE CASE HANDLE KARNA
+       // Agar AI ne bola ke task already exist karta hai (reuse = true)
+        if (aiTask.reuse) {
 
-           return aiTask.task; //existing task object return 
+      // existingTask = DB se aya hua pehle se bana hua task
+     // Ye agent ke "observation" se aata hai (checkExistingTask tool se)
+       const existingTask = aiTask.observation;
 
-         };
+     // IMPORTANT:
+    // Kyunki hum naya task create nahi kar rahe,
+   // isliye hame manually relations update karni padti hain
+
+   //  updateRelations kya karega:
+   // - Project me:
+   //    • task already hai ya nahi check karega
+   //    • user ko members array me add karega (agar nahi hai)
+   // - Space me:
+   //    • user ko members array me add karega (agar nahi hai)
+
+   // existingTask → hame batata hai ye task kis project/space ka hai
+   // user._id → hame batata hai kis user ko add karna hai
+      await updateRelations(existingTask, user._id);
+
+   // Final:
+   // Naya task create nahi karna
+   // Existing task hi return kar dena
+      return existingTask;
+   };
 
 
          // Helper function for existing task: Project aur space relations update karne ke liye 
-         const updateRelations = async (task: any, userId) => {
+         async function updateRelations (task: any, userId) {
 
             // Project find karo aur update karo
            const project = await projects.findById(task.projectId);
@@ -96,7 +118,7 @@ export const createTaskForUser = async (user: IUser) => {
          }
 
          // Space find karo aur update karo
-         const space = await ClickUpSpace.findById(task._spaceId);
+         const space = await ClickUpSpace.findById(task.spaceId);
 
        if (space && !space.members.includes(userId)) {
 

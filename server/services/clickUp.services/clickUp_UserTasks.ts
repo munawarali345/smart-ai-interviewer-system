@@ -1,3 +1,4 @@
+
 // Importing Task model from MongoDB schema
 import Task from '@/server/models/clickUp_Models/clickUp_Task';
 // ================================
@@ -9,7 +10,7 @@ export const getUserTasks = async (userId: string) => {
 
     // Step 1: Fetch all tasks from DB where userId matches
     // Reason: Each user has multiple tasks, so we use find() not findById()
-    const tasks = await Task.find({ userId })
+    const tasks = await Task.find({ assignees: userId })
 
         // Step 2: Sort tasks by creation date (newest first)
         // -1 means descending order (latest task on top)
