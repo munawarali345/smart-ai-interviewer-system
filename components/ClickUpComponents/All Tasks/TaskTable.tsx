@@ -4,7 +4,9 @@
 // Data Source: Aggregated tasks + user lookup included
 // ============================================================================
 
+import { useRouter } from "next/navigation";
 import { IClickUpTask } from "@/types/clickUp_Task.Type";
+
 
 // Props: parent se aggregated tasks aa rahe hain
 interface Props {
@@ -48,7 +50,23 @@ const getInitials = (name: string) => {
 // ============================================================================
 
 export default function TaskTable({ tasks }: Props) {
+
+// route init
+const router = useRouter();
+
+// =====================================================
+  // TASK CLICK HANDLER (CLICKUP STYLE NAVIGATION)
+// =====================================================
+const handleTaskClick = (taskId: string) => {
+
+  router.push(`/clickup/dashboard/AllTasks/t/${taskId}`);
+
+};
+
+
+  // main UI work
   return (
+
     <div className="mt-3">
 
       {/* ================= TABLE HEADER ================= */}
@@ -65,13 +83,17 @@ export default function TaskTable({ tasks }: Props) {
         {tasks.map((task) => (
 
           <div
+
             key={task._id?.toString()} // React unique key
-            className="grid grid-cols-4 items-center text-sm bg-white hover:bg-gray-50 border p-2 rounded-md"
+            onClick={() => handleTaskClick(task._id?.toString() || "")}
+            className="grid grid-cols-4 items-center text-sm bg-white cursor-pointer transition-all duration-200 hover:bg-gray-100 border p-2 rounded-md"
           >
 
             {/* ================= TASK TITLE ================= */}
-            <p className="font-medium text-gray-800">
+            <p className="font-medium text-gray-800" >
+                
               {task.title}
+
             </p>
 
             {/* ================= ASSIGNEES ================= */}
@@ -80,7 +102,7 @@ export default function TaskTable({ tasks }: Props) {
               {task.assignees?.length ? (
                 task.assignees.map((user: any) => {
 
-                  // ✅ NOW comes from USER LOOKUP
+                  //  NOW comes from USER LOOKUP
                   const name = user?.name || "User";
 
                   const initials = getInitials(name);

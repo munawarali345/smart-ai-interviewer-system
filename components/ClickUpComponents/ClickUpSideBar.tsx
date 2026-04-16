@@ -60,7 +60,7 @@ export default function Sidebar() {
     <div>
 
       {/* All Tasks button ko Link me wrap */}
-      <Link href="/clickup/dashboard/AllTasks">
+      <Link href="/clickup/dashboard/AllTasks?view=list">
 
        <Button variant="ghost" className="w-full justify-start flex items-center gap-2 font-semibold">
 

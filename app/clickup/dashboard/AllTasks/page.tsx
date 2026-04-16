@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { useTaskStore } from "@/lib/stores/taskStore"; // Task store
 import { useUserStore } from "@/lib/stores/userStore"; //  User store (IMPORTANT)
 import TaskTable from "@/components/ClickUpComponents/All Tasks/TaskTable";
+import { useSearchParams } from "next/navigation"; // header componet me kam kia he view list ka url base us ke liye 
 import {
   Accordion,
   AccordionItem,
@@ -29,6 +30,16 @@ export default function AllTasksPage() {
   // tasks = Space → Project → Status → Tasks
   // ============================
   const { tasks, loading, error, fetchTasks } = useTaskStore();
+
+
+  // =====================================================
+  // URL SEARCH PARAMS
+  // Example: ?view=list
+  // =====================================================
+  const searchParams = useSearchParams();
+
+  const view = searchParams.get("view") || "list"; // read url for rendering
+
 
     // ============================
   //  API CALL (jab page load ho)
@@ -61,108 +72,112 @@ export default function AllTasksPage() {
     return <p>No tasks found</p>;
   }
 
+  // =====================================================
+// VIEW SWITCH SYSTEM
+// header me list by default select hoga
+// or jab view change hoga to sirf usi ka content show hoga
+// =====================================================
 
-  //  MAIN UI START
-   return (
-    <div className="space-y-6">
+return (
+  <div className="space-y-6">
 
-      {/* =========================================================
-         LEVEL 1: PROJECT BOX LOOP
-         tasks[] = aggregated array from backend
-         Har item = ek Project box
-      ========================================================== */}
-      {tasks.map((item) => (
+    {/* =========================================
+        VIEW 1: LIST VIEW (ClickUp Default)
+    ========================================= */}
+    {view === "list" && (
 
-        <div
-          key={item.projectId} // unique key (React optimization)
-          className="border rounded-lg bg-white p-4 shadow-sm"
-        >
+      <>
+        {/* =========================================================
+           LEVEL 1: PROJECT BOX LOOP
+           tasks[] = aggregated array from backend
+           Har item = ek Project box
+        ========================================================== */}
+        {tasks.map((item) => (
 
-          {/* =====================================================
-             SPACE NAME (Top small text)
-             Source: aggregation → space.name
-           ===================================================== */}
-          {/* Space Name (small) */}
-          <p className="text-xs text-gray-500">
-            {item.spaceName}
-          </p>
+          <div
+            key={item.projectId} // unique key (React optimization)
+            className="border rounded-lg bg-white p-4 shadow-sm"
+          >
 
-          {/* =====================================================
-             PROJECT LEVEL (Expandable)
-             Source: aggregation → project.name
-          ===================================================== */}
-          {/*PROJECT ACCORDION */}
-          <Accordion type="single" collapsible defaultValue={item.projectId}>
+            {/* =====================================================
+               SPACE NAME (Top small text)
+               Source: aggregation → space.name
+            ===================================================== */}
+            <p className="text-xs text-gray-500">
+              {item.spaceName}
+            </p>
 
-            <AccordionItem value={item.projectId}>
+            {/* =====================================================
+               PROJECT LEVEL (Expandable)
+               Source: aggregation → project.name
+            ===================================================== */}
+            <Accordion type="single" collapsible>
 
-              {/* Project Name (click to expand) */}
-              <AccordionTrigger className="text-lg font-semibold no-underline">
-                {item.projectName}
-              </AccordionTrigger>
+              <AccordionItem value={item.projectId}>
 
+                {/* Project Name (click to expand) */}
+                <AccordionTrigger className="text-lg font-semibold no-underline">
+                  {item.projectName}
+                </AccordionTrigger>
 
-              <AccordionContent>
+                <AccordionContent>
 
-                 {/* =====================================================
-                   LEVEL 2: STATUS LOOP
-                   statuses[] = [{ status, tasks }]
-                ===================================================== */}
+                  {/* =====================================================
+                     LEVEL 2: STATUS LOOP
+                     statuses[] = [{ status, tasks }]
+                  ===================================================== */}
+                  <Accordion type="multiple" defaultValue={["to do"]} className="ml-4">
 
-                {/*  STATUS ACCORDION */}
-                <Accordion type="multiple"  defaultValue={["to do"]} className="ml-4">
+                    {item.statuses.map((statusItem) => (
 
-                  {item.statuses.map((statusItem) => (
+                      <AccordionItem
+                        key={statusItem.status}
+                        value={statusItem.status}
+                      >
 
-                    <AccordionItem
-                      key={statusItem.status} // unique per status
-                      value={statusItem.status}
-                    >
+                        {/* Status Header */}
+                        <AccordionTrigger className="text-sm font-medium no-underline">
+                          {statusItem.status.toUpperCase()} (
+                          {statusItem.tasks.length}
+                          )
+                        </AccordionTrigger>
 
-                      {/* Status Header */}
-                      <AccordionTrigger className="text-sm font-medium no-underline">
+                        <AccordionContent>
 
-                        {statusItem.status.toUpperCase()} (
-                        {statusItem.tasks.length}
-                        )
+                          {/* =====================================================
+                             LEVEL 3: TASK TABLE
+                             tasks[] = full task objects (from $$ROOT)
+                          ===================================================== */}
+                          <div className="space-y-2 ml-4">
 
-                      </AccordionTrigger>
+                            <TaskTable tasks={statusItem.tasks} />
 
+                          </div>
 
-                      <AccordionContent>
+                        </AccordionContent>
 
-                        {/* =====================================================
-                           LEVEL 3: TASK LOOP
-                           tasks[] = full task objects (from $$ROOT)
-                        ===================================================== */}
+                      </AccordionItem>
 
-                        {/* TASK LIST */}
-                        <div className="space-y-2 ml-4">
+                    ))}
 
-                          <TaskTable tasks={statusItem.tasks} />
+                  </Accordion>
 
-                        </div>
+                </AccordionContent>
 
-                      </AccordionContent>
+              </AccordionItem>
 
-                    </AccordionItem>
+            </Accordion>
 
-                  ))}
+          </div>
 
-                </Accordion>
+        ))}
+      </>
+    )}
 
-              </AccordionContent>
+  </div>
 
-            </AccordionItem>
-
-          </Accordion>
-
-        </div>
-
-      ))}
-
-    </div>
   );
+
 }
 
 
@@ -298,4 +313,42 @@ React efficiently re-render karta hai aur performance improve hoti hai
    - Real-time updates
 
  Ye exactly ClickUp / Trello jese apps ka base pattern hai
+*/
+
+
+/*
+SIDEBAR CLICK FLOW (ENTRY POINT)
+=====================================================
+
+👉 User clicks "All Tasks" in sidebar
+
+Step 1:
+Sidebar link open hota hai
+→ /clickup/dashboard/AllTasks?view=list
+
+Step 2:
+Next.js page load hota hai
+→ AllTasksPage render hota hai
+
+Step 3:
+URL se view read hota hai
+→ useSearchParams()
+→ view = "list" (default ya URL se)
+
+Step 4:
+API call trigger hoti hai
+→ useEffect runs
+→ fetchTasks(userId)
+
+Step 5:
+Backend aggregation run hoti hai
+→ Space → Project → Status → Tasks structure return hota hai
+
+Step 6:
+Data store me aata hai
+→ Zustand store update hota hai
+
+Step 7:
+UI render hota hai
+→ {view === "list" && ->
 */
