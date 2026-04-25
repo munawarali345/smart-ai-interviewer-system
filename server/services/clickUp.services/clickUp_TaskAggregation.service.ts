@@ -19,11 +19,11 @@ export const getUserTasAggregatedData = async (userId: string) => {
   const data = await Task.aggregate([
 
     // step 1: MATCH → sirf user ke tasks
-    {
-      $match: {
-        assignees: userObjectId //Match tasks where assignees include the user.
-      }
-    },
+    // {
+    //   $match: {
+    //     assignees: userObjectId //Match tasks where assignees include the user.
+    //   }
+    // },
 
     // step 2: Lookup space collection and unwind (join space).
     {

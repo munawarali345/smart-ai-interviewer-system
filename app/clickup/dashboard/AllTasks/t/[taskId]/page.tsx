@@ -6,8 +6,8 @@
 
 // Next.js hook jo URL se dynamic params nikalta hai
 import { useParams } from "next/navigation";
+import TaskModal from "@/components/ClickUpComponents/All Tasks/TaskModal";
 
-import { useEffect } from "react";
 
 export default function TaskRoutePage() {
 
@@ -22,28 +22,7 @@ export default function TaskRoutePage() {
   const params = useParams();
 
   //  yahan se actual taskId mil rahi hai URL se
-  const taskId = params?.taskId;
-
-  // =====================================================
-  // 2. DEBUG / FLOW CHECK (SAMJHNE KE LIYE)
-  // =====================================================
-  useEffect(() => {
-
-    //  agar taskId mil gayi hai to console me print karo
-    if (taskId) {
-      console.log("🔵 Task ID from URL:", taskId);
-
-      // -----------------------------------------------------
-      //  YE VALUE KAHAN SE AA RAHI HAI?
-      // -----------------------------------------------------
-      //  URL se aa rahi hai:
-      // /AllTasks/t/123
-      //
-      //  Next.js route system isko parse karta hai
-      // -----------------------------------------------------
-    }
-
-  }, [taskId]);
+  const taskId = params?.taskId as string;
 
   // =====================================================
   // 3. UI (ABHI EMPTY HAI - KYUN?)
@@ -51,16 +30,7 @@ export default function TaskRoutePage() {
   //  kyunki STEP 1 sirf routing test hai
   //  STEP 2 me yahan modal open hoga
   // =====================================================
-  return (
-    <div>
-
-      {/* Placeholder UI */}
-      <h1 className="text-sm text-gray-500 p-4">
-        Task route loaded (no UI yet)
-      </h1>
-
-    </div>
-  );
+    return <TaskModal taskId={taskId} />;
 }
 
 //  FLOW (AB CLEAR SAMJHO)
@@ -74,16 +44,6 @@ export default function TaskRoutePage() {
 // ↓ useParams() returns:
 //    taskId = "123"
 
-// ↓ useEffect run hota hai
-
-// ↓ console log:
-//    🔵 Task ID from URL: 123
-//  YE FILE KAHAN SE DATA LE RAHI HAI?
-//  1. URL se:
-// /t/123
-//  2. Next.js routing system se:
-// [taskId] folder automatically inject karta hai
-// IMPORTANT CONCEPT
 
 //  Ye file database se kuch nahi le rahi
 //  Ye sirf URL read kar rahi hai
@@ -94,28 +54,28 @@ export default function TaskRoutePage() {
 // ✔ taskId readable
 // ✔ Next.js dynamic routing OK
 
-// 🚀 NEXT STEP (STEP 2)
+//  NEXT STEP (STEP 2)
 
 // Ab hum karenge:
 
-// 🔥 TASK CLICK → URL CHANGE
+//  TASK CLICK → URL CHANGE
 // TaskTable me:
 // router.push(/clickup/dashboard/AllTasks/t/${task._id})
 
-// 👉 jisse ClickUp jaisa behavior banega
+//  jisse ClickUp jaisa behavior banega
 
-// 💬 SIMPLE SUMMARY
+//  SIMPLE SUMMARY
 
-// 👉 STEP 1 = URL samajhna
-// 👉 STEP 2 = click → URL change
-// 👉 STEP 3 = modal open
+//  STEP 1 = URL samajhna
+//  STEP 2 = click → URL change
+//  STEP 3 = modal open
 
-// 👉 AB BATAO
+//  AB BATAO
 
 // Agar ye clear hai to bolo:
 
-// 👉 “step 2 start”
+//  “step 2 start”
 
-// phir main tumhe real ClickUp-style click system bana ke dunga 🔥
+// phir main tumhe real ClickUp-style click system bana ke dunga 
 
 

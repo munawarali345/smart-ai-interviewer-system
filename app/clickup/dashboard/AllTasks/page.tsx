@@ -49,7 +49,7 @@ export default function AllTasksPage() {
     // Safety check: user exist karta ho tabhi API call karo
     if (user?._id) {
 
-      // 🔥 Backend ko userId bhej rahe hain
+      // Backend ko userId bhej rahe hain
       // Backend us user ke assigned tasks return karega (aggregation ke sath)
       fetchTasks(user._id.toString());
     }

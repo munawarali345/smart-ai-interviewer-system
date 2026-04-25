@@ -35,7 +35,7 @@ const taskSchema: Schema<IClickUpTask> = new Schema ({
 
     projectId: {
         type: mongoose.Types.ObjectId,
-        ref: "project",
+        ref: "Project",
         required: [true, "Project ID required"],
         index: true
     },
@@ -101,10 +101,48 @@ const taskSchema: Schema<IClickUpTask> = new Schema ({
         maxlength: [50, 'tag cannot exceed 50 characters']
     }],
 
+    timeEstimate: {
+         type: String,  // Optional string
+         default: "Not set"
+    },
+
+    timeTracked: {
+        type: String,  // Optional string
+        default: "0 hours"
+    },
+
+   relationships: [{
+        type: String,  // Array of strings
+    }],
+
+    attachments: [{  // Array of Objects (multiple files ka data)
+        fileName: String,
+        filePath: String,
+        fileType: String,
+        fileSize: Number,
+
+        // user info
+        uploadedBy: {
+           userId: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: "ClickUpUser"
+            },
+
+            name: String,
+
+           },
+
+            uploadedAt: {
+               type: Date,
+               default: Date.now
+            }
+    }],
+
     // Subtasks (AI + user dono add kar sakte)
     subTask: [{
         title: { type: String },
-        completed: { type: Boolean, default: false }
+        completed: { type: Boolean, default: false },
+        description: { type: String },
       }],
 
     //  Comments (discussion/chat)
@@ -121,6 +159,7 @@ const taskSchema: Schema<IClickUpTask> = new Schema ({
           type: Date,
           default: Date.now
         }
+        
       }
     ],
 

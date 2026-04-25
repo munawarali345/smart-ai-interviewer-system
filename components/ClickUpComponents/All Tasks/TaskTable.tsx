@@ -85,7 +85,9 @@ const handleTaskClick = (taskId: string) => {
           <div
 
             key={task._id?.toString()} // React unique key
+
             onClick={() => handleTaskClick(task._id?.toString() || "")}
+            
             className="grid grid-cols-4 items-center text-sm bg-white cursor-pointer transition-all duration-200 hover:bg-gray-100 border p-2 rounded-md"
           >
 

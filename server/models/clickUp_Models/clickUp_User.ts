@@ -82,4 +82,4 @@ userSchema.index({ createdAt: -1}); // recent users first
 
 
 // Export user model
-export default mongoose.models.clickUpUser || mongoose.model<IUser>("clickUpUser", userSchema);
+export default mongoose.models.ClickUpUser || mongoose.model<IUser>("ClickUpUser", userSchema);

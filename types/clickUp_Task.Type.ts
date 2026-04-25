@@ -8,6 +8,7 @@ import mongoose, { Document, Types } from "mongoose";
 export interface ISubtask {
   title: string;
   completed: boolean;
+  description?: string;
 }
 
 // Comment interface (discussion ke liye)
@@ -62,6 +63,29 @@ export interface IClickUpTask extends Document {
 
     // activity logs
     activityLogs: IActivityLog[];
+
+    timeEstimate?: string;  // Estimated time (e.g., "2 hours")
+
+    timeTracked?: string;  // Tracked time (e.g., "1.5 hours")
+    
+    relationships?: string[];  // Related tasks (e.g., ["Depends on Task 123"])
+
+    attachments?: {  // Array of Objects (multiple files ka data)
+          fileName: string;
+          filePath: string;
+          fileType: string;
+          fileSize: number;
+
+          uploadedBy: {
+
+              userId: Types.ObjectId;
+              name: string;
+
+          },
+
+          uploadedAt: Date;
+
+        }[];
 
     // system fields
     createdAt: Date;
