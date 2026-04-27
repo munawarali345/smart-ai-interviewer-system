@@ -85,6 +85,9 @@ export async function generateTask(userData: IAgentInput, today: string) {
           - Mid: Phase 2 → Phase 3 (skip Phase 1)
           - Senior: Phase 3 only (skip Phase 1 & 2)
 
+          - For interns, ALWAYS generate Phase 1 (Onboarding) tasks first. Do NOT skip to Phase 2.
+          - Ensure projectName matches phase: 'Onboarding Project' for Phase 1, 'Skills Development Project' for Phase 2, 'Production Tasks Project' for phase 3
+
         Task Reuse Rules:
           - Onboarding tasks are reusable for multiple users in the same role/department
           - Skills and Real tasks are unique per user
@@ -719,13 +722,13 @@ export async function generateTask(userData: IAgentInput, today: string) {
         -------------------------------------------------
          IMPORTANT RULES
         -------------------------------------------------
-
          - DO NOT explain anything
          - DO NOT add markdown
          - OUTPUT MUST BE PURE JSON ONLY
          - ALWAYS follow onboarding-first rule
          - Remember the spaceId and projectId from observations, and include them in the final task output. Do not output plans or actions in the final response.
          - In the final task output, use the spaceId and projectId from the last observation exactly.
+         
     `;
 
     // step 2 userMessage
@@ -752,12 +755,14 @@ export async function generateTask(userData: IAgentInput, today: string) {
 
       // step 5 geoq client call/ LLM call with current messages
        //  OPENROUTER CALL (REPLACED GROQ)
-    const chat = await openRouterClient(messages, "openai/gpt-4o-mini");
+    const chat = await openRouterClient(messages, "inclusionai/ling-2.6-1t:free");
+    // hugging face call 
+    // const chat = await huggingFaceClient(messages, "mistralai/Mistral-7B-Instruct");
 
 
     // const chat = await groqClient.chat.completions.create({
 
-    //     model: 'meta-llama/llama-prompt-guard-2-22m',
+    //     model: 'llama-3.1-8b-instant',
     //     temperature: 0.1,
     //     messages: messages,  // updated messages yaha push hute rehange(histroy include)
     //     response_format: {type: 'json_object'}

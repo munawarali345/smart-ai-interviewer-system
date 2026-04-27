@@ -1,3 +1,5 @@
+
+//openrouter work
 export const openRouterClient = async (messages: any, model?: string) => {
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -6,7 +8,7 @@ export const openRouterClient = async (messages: any, model?: string) => {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: model || "openai/gpt-4o-mini",
+      model: model || " qwen/qwen3-coder:free",
       messages,
       response_format: {type: 'json_object'}
     })

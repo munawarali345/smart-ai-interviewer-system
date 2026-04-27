@@ -10,7 +10,8 @@ import Task from "@/server/models/clickUp_Models/clickUp_Task";
 // Related models register karwa rahe hain taake populate work kare
 import "@/server/models/clickUp_Models/clickUp_User";  
 import  "@/server/models/clickUp_Models/clickUp_Space";
-import  "@/server/models/clickUp_Models/clickUIp_Projects"
+import  "@/server/models/clickUp_Models/clickUIp_Projects";
+import "@/server/models/clickUp_Models/clickUp_SystemUser";
 
 // import buildActivityFeed service
 import buildActivityFeed from "./buildActivityFeed";
@@ -40,6 +41,7 @@ export const getTaskByIdService = async (taskId: string) => {  // Function: task
       //  ye papulate hu raha he activity panel k liye waha sab ye show huga
       // for comments yaha comments._userId ko hum object me converr ker raha he 
       // or uska name or role add ker rehe he object main
+      // dynamic populate via refPath
       .populate("comments.userId", "name role")
 
       // for activity yaha b hum wai ker raha he activityLog.performedBy  ko hum object me converr ker raha he 

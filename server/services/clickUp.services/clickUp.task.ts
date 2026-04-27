@@ -140,9 +140,9 @@ export const createTaskForUser = async (user: IUser) => {
             tags: aiTask.tags,
             dueDate: new Date(aiTask.dueDate),
             assignees: [user._id],
-            comments: aiTask.initialComment.map(c => ({ ...c, userId: systemUserId, createdAt: new Date() })), // initial comments kisne kia he uski id or date  added
+            comments: aiTask.initialComment.map(c => ({ ...c, userId: systemUserId,  userModel: "clickUpSystemUser", createdAt: new Date() })), // initial comments kisne kia he uski id or date  added
             subTask: aiTask.subTask,
-            activityLogs: aiTask.activityLogs.map(log => ({ ...log, performedBy: systemUserId, createdAt: new Date() })),  // createdAt or performedBy added
+            activityLogs: aiTask.activityLogs.map(log => ({ ...log, performedBy: systemUserId, performedModel: "clickUpSystemUser", createdAt: new Date() })),  // createdAt or performedBy added
             spaceId: aiTask.spaceId,
             projectId: aiTask.projectId,
             phase: aiTask.phase,  // Add: AI response se phase lo

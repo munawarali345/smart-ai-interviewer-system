@@ -5,12 +5,13 @@ import { create } from 'zustand';  // Zustand se create function import for stor
 import { IClickUpTask } from '@/types/clickUp_Task.Type';  // Tasks ka interface import
   // Tasks fetch ka API helper import
 import getUserAllTasks from '../api/getUserAllTasks';
+import { changeTaskStatus } from '../api/taskStatusChange';
 
 // ============================================================================
 // INTERFACES (DATA STRUCTURE FOR UI)
 // ============================================================================
 
-// 🔹 Level 1: Status level (e.g. "To Do", "In Progress")
+//  Level 1: Status level (e.g. "To Do", "In Progress")
 interface TaskStatus {
 
   // Task ka current status (group)
@@ -51,8 +52,12 @@ interface TaskState {
 
   error: string | null;  // Error state: agar fetch fail ho
 
+   // tasks fetch karta hai
   fetchTasks: (userId: string) => Promise<void>;  // Async action: userId se 
-  // tasks fetch karta hai
+ 
+  // status update k liye 
+  updateTaskStatus: (taskId: string, newStatus: string, userId: string) => Promise<void>;
+
   setTask: (tasks: TaskBoardItem[]) => void;  // Sync action: tasks manually set karta hai
 
 }
@@ -86,6 +91,67 @@ export const useTaskStore = create<TaskState>((set) => ({
     }
     
   },
+
+  // yaha hum task update or task ko move karwa raha he ek status se doosre me 
+  // Function start: async function, params: taskId (string), newStatus (string), userId (string)
+  // Ye params UI se aate hain (TaskDetailsPanel se onChange par)
+  updateTaskStatus: async (taskId, newStatus, userId) => {
+
+   set({ loading: true, error: null });  // Loading start karo, error clear karo
+
+  try {
+    
+    // Step 1: API call karo changeTaskStatus se
+    const UpdatedStatus = await changeTaskStatus({ taskId, newStatus, userId });
+    
+    // Local state update: task ko old status se remove, new mein add
+    set((prevState) => {
+      // prevState: Current store state (tasks array, grouped by space/project/status)
+      // set function ko prevState milta hai access karne ke liye
+
+      // Step 3: New tasks array banao by mapping over prevState.tasks
+      const newTasks = prevState.tasks.map(board => ({
+        // Har board (space/project) ko traverse karo
+        // board: { spaceId, spaceName, projectId, projectName, statuses: [...] }
+
+        ...board,  // Board ka baaki data copy karo
+
+         statuses: board.statuses.map(statusGroup => ({
+          // Har statusGroup ko traverse karo (e.g., "to do", "in progress")
+          // statusGroup: { status: string, tasks: IClickUpTask[] }
+
+          ...statusGroup,  // StatusGroup ka baaki data copy karo
+
+            tasks: statusGroup.tasks.filter(t => t._id.toString() !== taskId)
+          // Task ko old status group se remove karo
+          // filter: Sirf wo tasks rakho jinka _id taskId se match nahi karta
+          // Result: Old group mein se ye task nikal gaya
+
+        })).map(statusGroup =>   // Ab second map: New status group mein add karo
+             
+          statusGroup.status === newStatus 
+
+            ? { ...statusGroup, tasks: [...statusGroup.tasks, UpdatedStatus.task] }
+            // Agar statusGroup.status newStatus se match karta hai (e.g., "in progress")
+            // To us group mein result.task add karo (API se updated task)
+            : statusGroup
+            // Warna, group ko waise ka waise rakho
+           )
+      }));
+             // Step 4: New state return karo
+               return { tasks: newTasks };
+            // Store ko newTasks set karo—UI update ho jayega
+    });
+
+    set({ loading: false });
+
+  } catch (error) {
+
+    set({ error: error.message, loading: false });
+
+  }
+},
+
 
   // setTask action: Tasks ko manually set karo (consistency ke liye)
   setTask: (tasks) => set({ tasks }),  // State me tasks update karo

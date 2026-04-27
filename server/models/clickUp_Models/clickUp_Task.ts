@@ -146,13 +146,20 @@ const taskSchema: Schema<IClickUpTask> = new Schema ({
       }],
 
     //  Comments (discussion/chat)
+    //  rePath add kar rahe he hum 
     comments: [
       {
         text: { type: String },
 
         userId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "ClickUpUser"
+          refPath: "comments.userModel"
+        },
+
+         userModel: {  
+            type: String,
+            enum: ["ClickUpUser", "clickUpSystemUser"],
+           required: true
         },
 
         createdAt: {
@@ -172,8 +179,14 @@ const taskSchema: Schema<IClickUpTask> = new Schema ({
 
         performedBy: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "ClickUpUser"
+          refPath: "activityLogs.performedModel"
           // AI ke case me "system user" use kar sakte ho
+        },
+
+        performedModel: {  // Add this
+            type: String,
+            enum: ['ClickUpUser', 'clickUpSystemUser'],
+             required: true
         },
 
         details: {

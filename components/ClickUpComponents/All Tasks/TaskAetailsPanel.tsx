@@ -2,6 +2,8 @@
 
 import { IClickUpTask } from "@/types/clickUp_Task.Type";
 import TaskAttachmentsSection from "./TaskAttachmentSection";
+import { useTaskStore } from '@/lib/stores/taskStore';
+ import { useUserStore } from '@/lib/stores/userStore'; // userId yaha se nikalene
 
 interface Props {
   task: IClickUpTask | null;
@@ -9,6 +11,23 @@ interface Props {
 
 export default function TaskDetailsPanel({ task }: Props) {
 
+
+  // Add hooks here
+  const updateTaskStatus = useTaskStore(state => state.updateTaskStatus); // store se updateTaskStatus functionnikal rahe he 
+
+  const { user } = useUserStore(); // store se user ka data nikal rahe he 
+
+  // Status change handler
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    console.log('Status change triggered', e.target.value); // add this
+
+  if ( !task || !user || !user._id ) return; // task null check
+
+  const newStatus = e.target.value;
+
+  updateTaskStatus(task._id.toString(), newStatus, user?._id.toString());
+
+};
     
    const getInitials = (name: string) => {
   return name
@@ -35,7 +54,9 @@ export default function TaskDetailsPanel({ task }: Props) {
         </p>
 
         <select
-          defaultValue={task?.status}
+
+          value={task?.status}
+          onChange={handleStatusChange}  // function call karo
           className="border px-3 py-1 rounded-md text-sm"
         >
           <option value="todo">To Do</option>
