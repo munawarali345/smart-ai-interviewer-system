@@ -41,11 +41,17 @@ export default function UserForm() {
 
   // Handle Input Changes - Generic for all inputs
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+
     const { name, value } = e.target;
+
     setFormData((prev) => ({
+
       ...prev,
+
       [name]: value,
+
     }));
+
   };
 
   // Handle Skills Change - Convert string to array
@@ -71,17 +77,23 @@ export default function UserForm() {
     try {
         // user creating api call 
       const result = await createUser(formData);
+
       if (result.success) {
 
         toast.success(result.message);
         
+        // ab url bun gya ase /dashboard?userId=123
           router.replace(`/clickup/dashboard?userId=${result.data._id}`);  // Redirect to dashboard with userId
       } else {
+
         toast.error(result.message);
       }
     } catch (err: any) {
+
       toast.error(err.message);
+
     } finally {
+
       setLoading(false);
     }
   };
@@ -198,3 +210,11 @@ export default function UserForm() {
 }
 
 // Component Ends
+
+// UserForm submit
+// ↓
+// createUser(formData)
+// ↓
+// backend DB me user create
+// ↓
+// result.data._id return

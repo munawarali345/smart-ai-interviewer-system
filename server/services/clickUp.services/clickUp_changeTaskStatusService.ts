@@ -22,7 +22,7 @@ export const changeTaskStatusService = async (
        const oldStatus = task.status;
 
         // 2. Status update karo
-         task.status = newStatus;
+         task.status = newStatus; // yaha se db me status udate hu raha he jo newstatus ara he 
 
         // 3. Activity log add karo
         task.activityLogs.push({

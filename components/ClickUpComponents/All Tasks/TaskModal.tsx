@@ -128,7 +128,7 @@ export default function TaskModal({ taskId }: Props) {
               </div>
 
               {/* RIGHT: ACTIVITY/COMMENTS */}
-              <div className="w-2/5 min-h-0  ">
+              <div className="w-2/5 min-h-0  h-full ">
                 {/* Yahan activity aur comments aaenge */}
                    <ActivityPanel task={task} />
                 {/* Next: Activity list add */}

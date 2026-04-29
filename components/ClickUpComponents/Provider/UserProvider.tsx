@@ -1,4 +1,4 @@
-// ye userprovider he kun ki header me hame user ki need he to wo header humn elayout me rakha he dashbord k to usko pehle user chaiye he to yaha ker re he take age mil jai
+// ye userprovider he kun ki header me hame user ki need he to wo header hum ne layout me rakha he dashbord k to usko pehle user chaiye he to yaha ker re he take age mil jai
 
 "use client";  // Yeh directive Next.js ko batata hai ke yeh Client Component hai—hooks use karne ke liye zaroori
 import { useEffect } from 'react';  // React hook import for side effects (e.g., data fetch)
@@ -11,9 +11,12 @@ export default function UserProvider({ children }: { children: React.ReactNode }
   const { fetchUser } = useUserStore();  // Store se fetchUser action lao
 
   useEffect(() => {  // Hook: Component mount hone pe run hota hai
+
     if (userId)  // Agar userId URL me hai
+
       fetchUser(userId);  // Store me user fetch karo aur set karo
-  }, [fetchUser]);  // Dependency: fetchUser change hone pe re-run (rare)
+
+  }, [ userId, fetchUser ]);  // Dependency: fetchUser change hone pe re-run (rare)
 
   return <>{children}</>;  // Wrapped components (children) return karo
 }

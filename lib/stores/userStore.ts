@@ -1,6 +1,8 @@
 import { create } from 'zustand';  // Zustand ka create function import, jo store banata hai
 import { IUser } from '@/types/clickUp_User.Type';  // IUser interface import for user type
 import getUserById from '@/lib/api/getUserById';  // API function import for fetching user
+import { persist } from 'zustand/middleware';  // persist middleware import
+
 
 interface UserState {  // Store ki shape define karne ka interface
 
@@ -17,16 +19,19 @@ interface UserState {  // Store ki shape define karne ka interface
 
 }
 
-export const useUserStore = create<UserState>((set) => ({  // Store create karo, set function state update ke liye
-  user: null,  // Initial user state: null (koi user nahi)
+export const useUserStore = create<UserState>()(
+persist(
 
-  loading: false,  // Initial loading state: false (loading nahi)
+ (set) => ({  // Store create karo, set function state update ke liye
+   user: null,  // Initial user state: null (koi user nahi)
 
-  error: null,  // Initial error null
+   loading: false,  // Initial loading state: false (loading nahi)
 
-  fetchUser: async (userId) => {  // Async action: userId le kar user fetch karega
+   error: null,  // Initial error null
 
-    set({ loading: true });  // Loading start: state me loading true set karo
+   fetchUser: async (userId) => {  // Async action: userId le kar user fetch karega
+
+     set({ loading: true });  // Loading start: state me loading true set karo
 
     try {  // Try block: agar fetch succeed ho
 
@@ -46,4 +51,15 @@ export const useUserStore = create<UserState>((set) => ({  // Store create karo,
 
   setUser: (user) => set({ user }),  // Sync action: user directly set karne ke liye
 
-}));
+  }),
+ {
+      name: 'user-store',  // localStorage key for persist
+      // On rehydrate, agar user hai to localStorage update
+      onRehydrateStorage: () => (state) => {
+        if (state?.user) {
+          localStorage.setItem('userId', state.user._id.toString());
+        }
+      },
+    }
+
+));

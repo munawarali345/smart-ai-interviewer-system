@@ -6,6 +6,7 @@ import mongoose, { Document, Types } from "mongoose";
 
 // Subtask interface (task ke andar choti tasks)
 export interface ISubtask {
+  _id: string; 
   title: string;
   completed: boolean;
   description?: string;

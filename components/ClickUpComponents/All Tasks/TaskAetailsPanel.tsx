@@ -3,7 +3,8 @@
 import { IClickUpTask } from "@/types/clickUp_Task.Type";
 import TaskAttachmentsSection from "./TaskAttachmentSection";
 import { useTaskStore } from '@/lib/stores/taskStore';
- import { useUserStore } from '@/lib/stores/userStore'; // userId yaha se nikalene
+import { useUserStore } from '@/lib/stores/userStore'; // userId yaha se nikalene
+import { updateSubtask } from "@/lib/api/updateSubtasks";  // API helper import
 
 interface Props {
   task: IClickUpTask | null;
@@ -38,6 +39,40 @@ export default function TaskDetailsPanel({ task }: Props) {
     .slice(0, 2);                  // Sirf first 2 characters lo (agar zyada ho)
 };
 
+   // Subtask toggle handler
+   const handleSubtaskToggle = async (subTaskId: string, completed: boolean) => {
+   
+
+     if (!task?._id || !user?._id) {
+        console.error("Missing task or user");
+        return;
+     };
+
+    try {
+
+      if (!subTaskId || typeof subTaskId !== "string") {
+        console.error("Invalid subTaskId detected");
+       return;
+      }
+
+      // API call to update subtask
+      await updateSubtask({
+        taskId: task!._id.toString(),  // task ID
+        subTaskId: subTaskId,  // subtask ID
+        completed: completed,  // new status
+        userId: user?._id?.toString() || '',  // user ID
+      });
+    // No refetch, UI later update
+    } catch (error) {
+
+    console.error("Error updating subtask:", error);
+
+    alert("Failed to update subtask");
+
+  }
+
+};
+
   return (
     <div className="space-y-6 ">
 
@@ -59,10 +94,11 @@ export default function TaskDetailsPanel({ task }: Props) {
           onChange={handleStatusChange}  // function call karo
           className="border px-3 py-1 rounded-md text-sm"
         >
-          <option value="todo">To Do</option>
+          <option value="to do">To Do</option>
           <option value="in progress">In Progress</option>
           <option value="review">Review</option>
-          <option value="complete">Complete</option>
+          <option value="completed">Completed</option>
+
         </select>
 
       </div>
@@ -213,6 +249,7 @@ export default function TaskDetailsPanel({ task }: Props) {
             <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-700"> 
 
                {task?.subTask?.length || 0} Items
+
              </span>
         </div>
 
@@ -236,7 +273,12 @@ export default function TaskDetailsPanel({ task }: Props) {
                   <input
                     type="checkbox"
                      checked={sub.completed}
-                      readOnly
+                     onChange={(e) => { 
+                      if (!sub._id) return;
+                        handleSubtaskToggle(
+                         sub._id.toString(), 
+                        e.target.checked)
+                     }} 
                        className="mt-1 h-4 w-4 rounded border-gray-300 cursor-pointer"
                      />
 
@@ -265,7 +307,9 @@ export default function TaskDetailsPanel({ task }: Props) {
                                >
 
                                  {sub.completed ? "Done" : "Pending"}
+
                              </span>
+
                         </div>
 
                           {sub.description && (
@@ -323,3 +367,5 @@ export default function TaskDetailsPanel({ task }: Props) {
     </div>
   );
 }
+
+// {/* toggle call e.target.checked boolean deta he (true/false checkbox k liye ye use huta he )*/}

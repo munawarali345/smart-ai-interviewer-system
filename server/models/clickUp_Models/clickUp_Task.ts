@@ -140,6 +140,7 @@ const taskSchema: Schema<IClickUpTask> = new Schema ({
 
     // Subtasks (AI + user dono add kar sakte)
     subTask: [{
+        _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
         title: { type: String },
         completed: { type: Boolean, default: false },
         description: { type: String },
