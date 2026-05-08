@@ -149,7 +149,6 @@ export const createTaskForUser = async (user: IUser) => {
             phaseOrder: aiTask.phaseOrder,  // Add: AI response se phaseOrder lo
             taskKey: aiTask.taskKey,  // Add: AI response se taskKey lo
             timeEstimate: aiTask.timeEstimate,  // Agent se aa raha hai
-            timeTracked: aiTask.timeTracked || "0 hours",  // Default if not from agent
             relationships: aiTask.relationships || [],  // Agent se aa raha hai
 
         });

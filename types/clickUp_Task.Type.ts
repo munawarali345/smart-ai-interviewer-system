@@ -27,6 +27,15 @@ export interface IActivityLog {
   createdAt?: Date;
 }
 
+// Time Entry interface (time tracking ke liye)
+export interface ITimeEntry {
+  startTime?: Date;
+  endTime?: Date;
+  duration: number; // minutes
+  userId: Types.ObjectId;
+  createdAt: Date;
+}
+
 // interface starts from here
 export interface IClickUpTask extends Document {
     
@@ -67,7 +76,7 @@ export interface IClickUpTask extends Document {
 
     timeEstimate?: string;  // Estimated time (e.g., "2 hours")
 
-    timeTracked?: string;  // Tracked time (e.g., "1.5 hours")
+    timeEntries: ITimeEntry[];  // Time tracking entries
     
     relationships?: string[];  // Related tasks (e.g., ["Depends on Task 123"])
 
@@ -85,6 +94,8 @@ export interface IClickUpTask extends Document {
           },
 
           uploadedAt: Date;
+          
+          extractedText?: string;
 
         }[];
 

@@ -753,13 +753,11 @@ export async function generateTask(userData: IAgentInput, today: string) {
     // step 4 infinate loop - jub tak output na mile, continue
     while (true) {
 
-      // step 5 geoq client call/ LLM call with current messages
+      
        //  OPENROUTER CALL (REPLACED GROQ)
     const chat = await openRouterClient(messages, "poolside/laguna-xs.2:free");
-    // hugging face call 
-    // const chat = await huggingFaceClient(messages, "mistralai/Mistral-7B-Instruct");
 
-
+    // step 5 geoq client call/ LLM call with current messages
     // const chat = await groqClient.chat.completions.create({
 
     //     model: 'llama-3.1-8b-instant',
@@ -799,6 +797,7 @@ if (!result) {
     
    const response = JSON.parse(result)
 
+  //  yaha se hum actions observation ye sab nikal raha he 
        
 if (response.title) {
 

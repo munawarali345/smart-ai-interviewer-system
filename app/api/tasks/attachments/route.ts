@@ -6,6 +6,9 @@ import logger from "@/server/lib/logger";
 import { saveAttachments } from "@/server/lib/clickUpTaskAttachmentsUploads/TaskAttachmentsUploads";
 import saveTaskAttachments from "@/server/services/clickUp.services/saveTaskAttachments_service" 
 
+import { processAttachments } from "@/server/services/clickUp.services/attachmentProcessor.service";
+import { finalizeTaskAttachments } from "@/server/services/clickUp.services/extractedAttachmentsSaveSb"; 
+
 // main POST Api function
 export async function POST(req: NextRequest) {
   try {
@@ -71,7 +74,7 @@ export async function POST(req: NextRequest) {
 
 
     // Step 10: DB me task ke sath save karo
-    const result = await saveTaskAttachments(taskId, enrichedFiles);
+     await saveTaskAttachments(taskId, enrichedFiles);
 
     // Step 11: success log
     logger.info("Attachments uploaded successfully", {
@@ -79,12 +82,27 @@ export async function POST(req: NextRequest) {
       totalFiles: savedFiles.length
     });
 
-    // Step 12: frontend ko response bhejo
+    
+    // ==============================================
+   // STEP 12: PROCESS ATTACHMENTS (OCR / PDF / DOCX)
+  // Yahan file ka REAL content extract hota hai
+  // isko file pahs caiye he jo  enrichedFiles me ha
+  // ==============================================
+    const processedFiles = await processAttachments(enrichedFiles);
+
+
+     // ==============================================
+   // STEP 13: extracted attchments yaha se save ker re he 
+  // ==============================================
+    const updatedTask = await finalizeTaskAttachments(taskId, processedFiles);
+
+
+    // Step 14: frontend ko response bhejo
     return NextResponse.json(
       {
         success: true,
         message: "Attachments uploaded successfully",
-        attachments: result.attachments
+        attachments: updatedTask.attachments
       },
       { status: 201 }
     );

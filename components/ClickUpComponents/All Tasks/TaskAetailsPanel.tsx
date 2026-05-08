@@ -1,10 +1,15 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { IClickUpTask } from "@/types/clickUp_Task.Type";
 import TaskAttachmentsSection from "./TaskAttachmentSection";
 import { useTaskStore } from '@/lib/stores/taskStore';
 import { useUserStore } from '@/lib/stores/userStore'; // userId yaha se nikalene
 import { updateSubtask } from "@/lib/api/updateSubtasks";  // API helper import
+import { useTimeTrackingStore } from '@/lib/stores/timeTrackingStore';  // store import
+
+// icons
+import { Play, Square } from "lucide-react";
 
 interface Props {
   task: IClickUpTask | null;
@@ -12,14 +17,82 @@ interface Props {
 
 export default function TaskDetailsPanel({ task }: Props) {
 
+  // State for hover
+  const [isHovered, setIsHovered] = useState(false);
 
   // Add hooks here
-  const updateTaskStatus = useTaskStore(state => state.updateTaskStatus); // store se updateTaskStatus functionnikal rahe he 
+  const updateTaskStatus = useTaskStore(state => state.updateTaskStatus); // store se updateTaskStatus function nikal rahe he 
 
   const { user } = useUserStore(); // store se user ka data nikal rahe he 
 
+  // Time tracking store se state aur actions lao
+  const { isRunning, elapsedTime, startTimer, stopTimer, resetTimer, currentTaskId, lastElapsed, updateElapsedTime } = useTimeTrackingStore();
+
+  // Reset timer for new task
+   useEffect(() => {
+      if (task?._id) {
+      resetTimer(); // New task ke liye time reset
+     }
+    }, [task?._id]);
+
+  // Ye useEffect har 1 second baad timer ka elapsed time update karta hai jab timer running ho.
+  // take UI me live timer (real-time seconds/minutes) show hota rahe bina page reload ke.
+  useEffect(() => {
+
+  let interval: NodeJS.Timeout;
+
+  if (isRunning && currentTaskId === task?._id.toString()) {
+
+    interval = setInterval(() => {
+
+      updateElapsedTime();
+
+    }, 1000);
+
+  }
+
+  return () => clearInterval(interval);
+
+}, [isRunning, currentTaskId]);
+// ends here
+
+// handle start stop
+const handleStartStop = async () => {
+
+   // Validation: Agar task ya user ID nahi, function exit karo 
+  if (!task?._id || !user?._id) return;
+
+  try {
+     // Condition: Timer running hai aur current task yahi hai
+    if (isRunning && currentTaskId === task._id.toString()) {  
+      
+    // Stop timer
+      await stopTimer(task._id.toString(), user._id.toString()); // API call: Stop timer with IDs
+
+    } else { // Timer running nahi ya different task
+
+      await startTimer(task._id.toString(), user._id.toString()); // API call: Start timer with IDs
+    
+    }
+
+  } catch (error) {
+
+    console.error("Timer error:", error);
+  }
+};
+// ends here
+
+// for formateTime  readable kerne k lie 
+const formatTime = (seconds: number) => {
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
+
   // Status change handler
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+
     console.log('Status change triggered', e.target.value); // add this
 
   if ( !task || !user || !user._id ) return; // task null check
@@ -38,6 +111,7 @@ export default function TaskDetailsPanel({ task }: Props) {
     .toUpperCase()                 // Uppercase karo ("MA")
     .slice(0, 2);                  // Sirf first 2 characters lo (agar zyada ho)
 };
+
 
    // Subtask toggle handler
    const handleSubtaskToggle = async (subTaskId: string, completed: boolean) => {
@@ -72,6 +146,7 @@ export default function TaskDetailsPanel({ task }: Props) {
   }
 
 };
+// subtask work ends here
 
   return (
     <div className="space-y-6 ">
@@ -115,8 +190,11 @@ export default function TaskDetailsPanel({ task }: Props) {
                   title={user?.name}  // Tooltip for full name
                   >
                  {getInitials(user?.name)}
+
             </div>
+
               ))
+
             ) : (
               <span className="text-gray-400 text-sm">Unassigned</span>
              )}
@@ -166,9 +244,43 @@ export default function TaskDetailsPanel({ task }: Props) {
 
        <p className="text-sm text-gray-500 w-32">Track Time</p>
 
-        <span className="text-sm">{task?.timeTracked || "0 hours"}</span>
+        <div className="text-2xl font-mono">{formatTime(elapsedTime)}</div>
+  
+          <button 
 
-      </div>
+             onClick={handleStartStop}
+
+              onMouseEnter={() => setIsHovered(true)}
+
+              onMouseLeave={() => setIsHovered(false)}
+
+              className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+
+              title={isRunning ? "Stop Timer" : "Start Timer"}  // Tooltip
+              >
+
+             {isRunning ? (
+
+               <Square className="w-4 h-4 text-red-500" />  // Stop icon
+
+           ) : (
+
+               <Play className="w-4 h-4 text-green-500" />  // Play icon
+
+             )}
+    
+             <span className="text-sm font-medium">
+
+               {isHovered ? (isRunning ? "Stop Time" : "Start Time") : (isRunning ? "Running" : (lastElapsed > 0 ? formatTime(lastElapsed) : "0h"))}
+
+            </span>
+
+          </button>
+
+       </div>
+
+      
+
 
       {/* TAGS SECTION */}
        <div className="flex items-center gap-10">
@@ -272,11 +384,17 @@ export default function TaskDetailsPanel({ task }: Props) {
                   {/* Checkbox */}
                   <input
                     type="checkbox"
+
                      checked={sub.completed}
+
                      onChange={(e) => { 
+
                       if (!sub._id) return;
+
                         handleSubtaskToggle(
+
                          sub._id.toString(), 
+                         
                         e.target.checked)
                      }} 
                        className="mt-1 h-4 w-4 rounded border-gray-300 cursor-pointer"

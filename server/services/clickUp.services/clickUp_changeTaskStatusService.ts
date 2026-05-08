@@ -1,6 +1,7 @@
 
 import Task from '@/server/models/clickUp_Models/clickUp_Task';
 import logger from "@/server/lib/logger";
+import { triggerReviewAgent } from "@/server/lib/triggerReviewAgent/triggerReviewAgent";
 // ================================
 // SERVICE: jub usr status change karega status update huga activity log update huga 
 // ================================
@@ -35,6 +36,29 @@ export const changeTaskStatusService = async (
 
         // 4. Save task
         await task.save();
+
+        // ================================
+        // AUTO REVIEW TRIGGER
+       // ================================
+
+      //step 5. Agar task review stage me chala gaya
+     if (newStatus === "review") {
+
+      // review agent trigger karo
+     const reviewResult = await triggerReviewAgent(taskId);
+
+     // log result
+     logger.info("Review completed", {
+       taskId,
+      decision: reviewResult.decision,
+      reason: reviewResult.reason,
+      feedBack: reviewResult.feedback,
+      confidence: reviewResult.confidence,
+
+    });
+
+  // OPTIONAL: yahan next step (main agent) later lagega
+   }
 
         logger.info("Task status updated", {
                taskId,

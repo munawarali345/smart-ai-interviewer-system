@@ -106,10 +106,13 @@ const taskSchema: Schema<IClickUpTask> = new Schema ({
          default: "Not set"
     },
 
-    timeTracked: {
-        type: String,  // Optional string
-        default: "0 hours"
-    },
+    timeEntries: [{  // Time tracking entries
+         startTime: { type: Date },
+         endTime: { type: Date },
+         duration: { type: Number, required: true }, // sec
+         userId: { type: mongoose.Schema.Types.ObjectId, ref: "ClickUpUser", required: true },
+         createdAt: { type: Date, default: Date.now },
+     }],
 
    relationships: [{
         type: String,  // Array of strings
@@ -135,6 +138,11 @@ const taskSchema: Schema<IClickUpTask> = new Schema ({
             uploadedAt: {
                type: Date,
                default: Date.now
+            },
+
+             extractedText: {
+                type: String,
+                default: ""
             }
     }],
 
