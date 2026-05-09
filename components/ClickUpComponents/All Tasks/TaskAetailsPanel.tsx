@@ -26,17 +26,12 @@ export default function TaskDetailsPanel({ task }: Props) {
   const { user } = useUserStore(); // store se user ka data nikal rahe he 
 
   // Time tracking store se state aur actions lao
-  const { isRunning, elapsedTime, startTimer, stopTimer, resetTimer, currentTaskId, lastElapsed, updateElapsedTime } = useTimeTrackingStore();
+  const { isRunning, elapsedTime, startTimer, stopTimer, currentTaskId, taskElapsedTimes, updateElapsedTime } = useTimeTrackingStore();
 
-  // Reset timer for new task
-   useEffect(() => {
-      if (task?._id) {
-      resetTimer(); // New task ke liye time reset
-     }
-    }, [task?._id]);
 
   // Ye useEffect har 1 second baad timer ka elapsed time update karta hai jab timer running ho.
   // take UI me live timer (real-time seconds/minutes) show hota rahe bina page reload ke.
+  // ye liver timer chalata he second by second
   useEffect(() => {
 
   let interval: NodeJS.Timeout;
@@ -54,6 +49,11 @@ export default function TaskDetailsPanel({ task }: Props) {
   return () => clearInterval(interval);
 
 }, [isRunning, currentTaskId]);
+// ye effect dobara chalega jab:
+
+// timer start/stop ho
+// task change ho
+
 // ends here
 
 // handle start stop
@@ -271,7 +271,36 @@ const formatTime = (seconds: number) => {
     
              <span className="text-sm font-medium">
 
-               {isHovered ? (isRunning ? "Stop Time" : "Start Time") : (isRunning ? "Running" : (lastElapsed > 0 ? formatTime(lastElapsed) : "0h"))}
+               {
+                 isHovered ? // hover true hua
+
+                //  agar time running he to stop time show hua warna start time
+                  (isRunning ? "Stop Time" : "Start Time") // to ye part chalega
+
+                  // agar hore ni he false ye else part he 
+                 : (
+                  // timer chal raha he ? kia jo task currently open he wai running task he  
+                  // agar duno condition true to running 
+                     isRunning && currentTaskId === task?._id.toString() // ye chalega
+
+                     ? "Running"
+
+                 : ( // else Agar current task running nahi
+                     // to ye part chalega
+                     task?._id &&  // task exist karta he? uski _id avalible he?
+
+                      taskElapsedTimes[task._id.toString()] //is task ka saved time he?
+
+                      // uper duno he to ye chalega Agar saved time mil gaya
+                      // to formatTime(600) seconds ko readable banata he
+                     ? formatTime(taskElapsedTimes[task._id.toString()])
+
+                  // else task ni mila or save time ni to ye sow karo 
+                   : "0h"
+
+                 )
+               )
+             }
 
             </span>
 

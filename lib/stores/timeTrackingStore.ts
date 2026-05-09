@@ -13,10 +13,10 @@ import { stopTimer as stopTimerAPI } from "@/lib/api/stopTimerApi";  // stop tim
 interface TimeTrackingState {
   // State properties
   isRunning: boolean;  // timer running hai ya nahi
-  startTime: Date | null;  // kab start hua (live calculation ke liye)
+  startTime: number | null;  // kab start hua (live calculation ke liye)
   elapsedTime: number;  // elapsed seconds kitne seconds ho gaye (UI display)
   currentTaskId: string | null;  // current task -> kaunsa task track ho raha hai
-  lastElapsed: number;  // last stopped time
+  taskElapsedTimes: Record<string, number>; // last stopped time Record ye object map huta he har task ka record huga is me k task A k track time phir task b ka task c ka task wise huga glober ek he ka ni k task A task b me b show hu Ab har task ka separate time save hoga. ye task id or seconds store krta he 
 
 
   // Actions
@@ -36,7 +36,7 @@ export const useTimeTrackingStore = create<TimeTrackingState>()(
       startTime: null,  // start time null
       elapsedTime: 0,  // elapsed 0
       currentTaskId: null,  // task null
-      lastElapsed: 0,
+      taskElapsedTimes: {}, // Ab empty object
 
 
       // Start timer action
@@ -48,7 +48,7 @@ export const useTimeTrackingStore = create<TimeTrackingState>()(
           // State update baad me
           set({
             isRunning: true,
-            startTime: new Date(),
+            startTime: Date.now(), // timestamp number
             elapsedTime: 0,
             currentTaskId: taskId,
           });
@@ -70,7 +70,11 @@ export const useTimeTrackingStore = create<TimeTrackingState>()(
             startTime: null,
             elapsedTime: 0,
             currentTaskId: null,
-            lastElapsed: get().elapsedTime,  // current elapsed save karo
+             
+            taskElapsedTimes: {       // har task ka own tracked time save hoga
+             ...get().taskElapsedTimes,
+              [taskId]: get().elapsedTime,
+           }, 
 
           });
         } catch (error) {
@@ -98,7 +102,7 @@ export const useTimeTrackingStore = create<TimeTrackingState>()(
           
     // yaha ye hu raha he k abi ka time minus start time seconds me convert u rahe he 
           const elapsed = Math.floor(
-              (Date.now() - state.startTime.getTime()) / 1000
+              (Date.now() - state.startTime) / 1000
             );
 
           set({ elapsedTime: elapsed });  // update UI me live seconds update
