@@ -179,6 +179,15 @@ const taskSchema: Schema<IClickUpTask> = new Schema ({
       }
     ],
 
+    reviewResult: {
+       decision: { type: String, enum: ['PASS', 'FAIL'] },
+       reason: String,
+       missingItems: [String],
+       feedback: String,
+       confidence: Number,
+       reviewedAt: { type: Date, default: Date.now }
+    },
+
     // Activity Log (VERY IMPORTANT)
     activityLogs: [{
         action: {

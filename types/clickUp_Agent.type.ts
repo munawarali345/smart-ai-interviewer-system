@@ -14,4 +14,22 @@ export interface IAgentInput {
   experienceLevel?: string;
   department?: string;
   manager?: string;
+
+   // =====================================
+  // progression/task memory context
+  // used for next intelligent task generation
+  // =====================================
+  progressionContext?: {
+    totalCompletedTasks: number;
+    onboardingCompletedCount: number;
+    skillsCompletedCount: number;
+    realCompletedCount: number;
+    onboardingCompleted: boolean;
+    skillsCompleted: boolean;
+    currentPhase: string;
+    latestCompletedTask: any;
+    latestReviewResult: any;
+    completedTasksSummary: any[];
+  };
+
 }

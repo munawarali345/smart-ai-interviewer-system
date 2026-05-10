@@ -99,6 +99,17 @@ export interface IClickUpTask extends Document {
 
         }[];
 
+        // reviewResult k iye 
+     reviewResult?: {
+           decision: 'PASS' | 'FAIL';
+           reason: string;
+           missingItems: string[];
+           feedback: string;
+           confidence: number;
+           reviewedAt: Date;
+        };
+
+
     // system fields
     createdAt: Date;
     updatedAt: Date;

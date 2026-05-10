@@ -34,6 +34,7 @@ Rules:
 - FAIL if important work is missing
 - Give short technical reason
 - Give missing items list
+- If no attachments/proof, include 'Attachments/proof of work' in missingItems.
 - Give helpful feedback
 - Return ONLY valid raw JSON.
 - Do not use markdown.

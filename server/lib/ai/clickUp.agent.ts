@@ -1,8 +1,6 @@
 // clickup Agent user create hute he ye agent trigger huga task create karega user k hisab se then us user ko ye task assign karega
 import mongoose from "mongoose";
 
-let realSpaceId;
-let realProjectId;
 
 // JSON.stringify ka format
 // JSON.stringify(value, replacer, space)
@@ -35,7 +33,13 @@ const tools = {
 
 
 // main ai function starts here 
-export async function generateTask(userData: IAgentInput, today: string) {
+export async function generateTask(
+  userData: IAgentInput, 
+  today: string) 
+{
+
+  let realSpaceId;
+  let realProjectId;
 
     // step 1 system prompt (Core Brain)
     const systemPrompt = `
@@ -56,6 +60,27 @@ export async function generateTask(userData: IAgentInput, today: string) {
          USER profile data
         -------------------------------------------------
           ${JSON.stringify(userData, null, 2)}
+
+        -------------------------------------------------
+         USER PROGRESSION CONTEXT
+        -------------------------------------------------
+
+          ${JSON.stringify(userData.progressionContext || {}, null, 2)}
+
+         This contains:
+           - user's completed task history
+           - current active phase
+           - completed phase counts
+           - latest completed task
+           - latest review result
+
+         IMPORTANT:
+           Use this context to:
+           - avoid repeated tasks
+           - continue proper phase progression
+           - generate next logical task
+           - maintain learning continuity
+           - ensure next task is logical and matches user's current phase
 
         You MUST use this data to make intelligent decisions.
 
@@ -161,6 +186,22 @@ export async function generateTask(userData: IAgentInput, today: string) {
         - If senior, start Phase 3.
         - Only generate next phase after previous phase tasks are completed by the user.
 
+        CRITICAL PHASE ENFORCEMENT:
+
+         - Strictly follow progressionContext flags. If onboardingCompleted: false, MUST generate onboarding task only.
+         - If skillsCompleted: false and currentPhase: 'skills', generate skills task.
+         - NEVER skip phases based on discretion; follow the completed flags exactly.
+         - For interns, require all 8 onboarding tasks completed before any skills task.
+
+        PHASE CONFIG REQUIREMENTS (STRICT NUMBERS FROM SYSTEM):
+
+         - Intern: After completing 8 onboarding tasks, move to skills phase; after completing 12 skills tasks, move to real phase.
+         - Junior: 0 onboarding tasks (skip onboarding), after completing 15 skills tasks, move to real phase.
+         - Mid: 0 onboarding tasks (skip onboarding), after completing 20 skills tasks, move to real phase.
+         - Senior: 0 onboarding tasks (skip onboarding), 0 skills tasks (skip skills), directly start real phase (unlimited real tasks).
+         - Check the onboardingCompleted/skillsCompleted flags in progressionContext and strictly follow these numbers. If flags are false, generate tasks only in the currentPhase.
+
+
 
         -------------------------------------------------
          TIME ESTIMATE RULES
@@ -182,12 +223,16 @@ export async function generateTask(userData: IAgentInput, today: string) {
          CORE BEHAVIOR
         -------------------------------------------------
 
-         1. ALWAYS generate tasks phase-wise based on experience level (as above)
+        1. ALWAYS generate tasks phase-wise based on experience level (as above)
          - Onboarding is mandatory for new interns only
          - Skills phase tasks assigned based on role + skills
          - Real phase tasks are full production-level tasks based on experience level
          - Always prioritize tasks based on user's role, skills, department, and experience level.
          - Use examples only as guidance, not limitation.
+
+         - If progressionContext exists, SKIP checkExistingTask tool completely, directly generate new task
+
+         - Never reuse tasks for users who have progressionData
 
         2. TASKS MUST BE REALISTIC:
          - must represent real company engineering work
@@ -200,6 +245,27 @@ export async function generateTask(userData: IAgentInput, today: string) {
           - If null, proceed to generate new task.
           - IMPORTANT: Call checkExistingTask only once per task generation. Do not call it multiple times or with different keys. After checking once, if not found, directly generate the new task without further tool calls.
            For Unique Tasks (Skills/Real): Skip check, always generate new.
+
+
+        IMPORTANT REUSE CONDITIONS:
+
+         - Reuse onboarding tasks ONLY when:
+          totalCompletedTasks === 0
+
+        - If user already completed one or more tasks:
+          DO NOT reuse onboarding tasks.
+
+        - Never assign the same onboarding task twice to the same user.
+
+        - Existing users must always receive:
+        - the next logical onboarding task
+        - OR the next phase task based on progression context.
+
+        - checkExistingTask tool should ONLY be called for:
+          first-time onboarding users.
+
+        - For next tasks (progressionContext exists), SKIP checkExistingTask, always generate NEW task with unique taskKey
+        - Never reuse completed tasks
 
         -------------------------------------------------
         EXPERIENCE LEVEL RULES
@@ -807,7 +873,7 @@ if (response.title) {
   // ab hum yaha se hamre step nikalneg action observation anad output
   // step 1 agar responce ka type action he AI ne tool call kia 
   if( response.type === 'action') {
-    const fn = tools[response.function]  // yaha hum function call karenge tools map se ek cheez nikal k lao which is response.funtion wo functin lega 
+    const fn = tools[response.function]  // yaha hum function call karenge tools map se ek cheez nikal k lao which is response.funtAion wo functin lega 
 
   if (!fn) throw new Error(`Tool ${response.function} not found`);
 
