@@ -6,6 +6,15 @@
 
 import  {Document, Types} from "mongoose";
 
+// ================================================================
+// Interface: IProject (populated object ke liye)
+// ================================================================
+export interface IProject {
+  _id: string;
+  name: string;
+}
+
+
 // interface starts from here
 export interface ISpace extends Document {
 
@@ -21,7 +30,7 @@ export interface ISpace extends Document {
     department: string,  
     
     // Array of projects ids jo is space me linked hain
-    projects?: string[],
+    projects?: IProject[],
 
     // Space ke members (department ke users)
     members: Types.ObjectId[];

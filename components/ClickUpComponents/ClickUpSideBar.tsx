@@ -1,4 +1,5 @@
 //  ye dashboard k sidebar ka componenet he
+"use client";
 
 // Sidebar Component: Left sidebar for navigation sections
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -6,7 +7,34 @@ import { Button } from "@/components/ui/button";
 import { Folder, CheckSquare, UserCheck, MessageSquare, Calendar, List } from 'lucide-react';  // User icon hata diya
 import Link from "next/link";
 
+import { useEffect } from "react";
+import { useSidebarSpacesStore } from "@/lib/stores/sidebarSpacesStore";  // Store import
+
 export default function Sidebar() {
+
+  // Store se state lao
+  const { spaces, loading, error, fetchSidebarSpaces } = useSidebarSpacesStore();
+
+  // useEffect: Simple, loadSpaces function for async
+  useEffect(() => {
+
+    const loadSpaces = async () => {
+
+      try {
+
+        await fetchSidebarSpaces();  // Store action call
+
+      } catch (err) {
+
+        console.error('Sidebar spaces load error:', err);  // Error log
+
+      }
+
+    };
+
+    loadSpaces();  // Call karo
+    
+  }, [fetchSidebarSpaces]);
 
   return (
 
@@ -129,44 +157,103 @@ export default function Sidebar() {
        {/* Divider: Sections ko separate karne ke liye */}
       <hr className="my-4 border-gray-300" />  {/* Subtle horizontal line */}
 
-         {/* My Tasks Section: Accordion */}
+      {/* Space Section: Accordion */}
       <div className="mb-6">
 
         <Accordion type="single" collapsible defaultValue="spaces">
 
           <AccordionItem value="spaces">
 
-            <AccordionTrigger className="flex items-center gap-2 font-semibold">
+            <AccordionTrigger className="flex items-center gap-2 font-semibold no-underline">
 
                <CheckSquare className="w-10 h-4" />
 
                    Spaces
+
             </AccordionTrigger>
 
           <AccordionContent className="pb-0">  {/* Padding adjust */}
 
-              <div className="space-y-1">  {/* No pl-6 */}
+            <div className="space-y-1">  {/* No pl-6 */}
                 
-                <Button variant="ghost" className="w-full justify-start flex items-center gap-2 ml-6">  {/* Manual indent */}
+              <Link href="/clickup/dashboard/AllTasks?view=list">
+                
+                <Button variant="ghost" className="w-full justify-start flex items-center gap-2 ml-6">
 
-                  <UserCheck className="w-4 h-4" />
+                  <CheckSquare className="w-4 h-4" />
 
-                  All Tasks
+                     All Tasks
 
-                </Button>
+                 </Button>
 
-              </div>
+               </Link>
 
-            </AccordionContent>
+            </div>
 
-          </AccordionItem>
+             {/* Loading state */}
+             {loading && <p className="text-sm">Loading spaces...</p>}
+        
+             {/* Error state */}
+             {error && <p className="text-sm text-red-500">Error: {error}</p>}
 
-        </Accordion>
+              {/* Success: Spaces accordions */}
+               {!loading && !error && ( // Condition: Sirf tab render karo jab loading false aur error null ho
 
-      </div>
+                 <Accordion type="single" collapsible> 
+
+                {/* Spaces array ko loop karo, har space ke liye JSX return */}
+                  {spaces.map((space) => (
+
+                    <AccordionItem key={space._id} value={space._id}>
+
+                     <AccordionTrigger className="flex items-center gap-2 ml-6 no-underline">
+
+                      <Folder className="w-4 h-4" /> {/* Folder icon */}
+
+                         {space.name}
+
+                     </AccordionTrigger>
+
+                    <AccordionContent> {/* content jo expend per show huga */}
+
+                      {/*  Space ke projects array ko loop karo */}
+                      {space.projects?.map((project) => (
+
+                    <Link key={project._id} href={`/clickup/dashboard/spaces/${project._id}?view=list`}>  {/* Link wrap - projectId URL mein */}
+
+                      <Button variant="ghost" className="w-full justify-start flex items-center gap-2 ml-12">
+
+                       <Folder className="w-4 h-4" />
+
+                         {project.name}
+
+                      </Button>
+
+                    </Link>
+
+                    ))}
+
+                 </AccordionContent>
+
+              </AccordionItem>
+
+            ))}
+
+          </Accordion>
+
+        )}
+
+
+        </AccordionContent>
+
+       </AccordionItem>
+
+      </Accordion>
+
+    </div>
       
 
-    </aside>
+  </aside>
 
   );
 

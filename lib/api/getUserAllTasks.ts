@@ -3,11 +3,20 @@
 import API_URL from "@/config/api";
 
 // Tasks fetch API main function
-export default async function getUserAllTasks(userId: string) {
+export default async function getUserAllTasks(userId: string, spaceId?: string, projectId?: string ) {
 
   try {
+
+    // Base URL
+    let apiUrl = `${API_URL}/api/tasks?userId=${userId}`;
+
+     // Filters add if provided
+    if (spaceId) apiUrl += `&spaceId=${spaceId}`;
+    if (projectId) apiUrl += `&projectId=${projectId}`;
  
-    const res = await fetch(`${API_URL}/api/tasks?userId=${userId}`); // api call 
+    const res = await fetch(apiUrl); // api call 
+
+   
 
     if (!res.ok) throw new Error('Failed to fetch tasks');
 

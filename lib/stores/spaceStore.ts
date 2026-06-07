@@ -40,3 +40,5 @@ export const useSpaceStore = create<SpaceState>((set) => ({  // Store export, cr
   setSpaces: (spaces) => set({ spaces }),  // State update
   
 }));
+
+// Manually set ka matlab: Agar data already hai, to setSpaces(spaces) call karo, fetch nahi karo.

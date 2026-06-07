@@ -53,7 +53,7 @@ interface TaskState {
   error: string | null;  // Error state: agar fetch fail ho
 
    // tasks fetch karta hai
-  fetchTasks: (userId: string) => Promise<void>;  // Async action: userId se 
+  fetchTasks: (userId: string, spaceId?: string, projectId?: string) => Promise<void>;  // Async action: userId se 
  
   // status update k liye 
   updateTaskStatus: (taskId: string, newStatus: string, userId: string) => Promise<void>;
@@ -71,13 +71,13 @@ export const useTaskStore = create<TaskState>((set) => ({
   error: null,  // Error initially null
 
   // fetchTasks action: API se tasks lao aur store me set karo
-  fetchTasks: async (userId) => {
+  fetchTasks: async ( userId, spaceId, projectId) => {
 
     set({ loading: true, error: null });  // Loading start karo, error clear karo
 
     try {
 
-      const tasks = await getUserAllTasks(userId);  // API helper se userId ke
+      const tasks = await getUserAllTasks(userId, spaceId, projectId);  // API helper se userId ke
       //  sath tasks fetch karo
       set({ tasks, loading: false });  // Success: tasks set karo, loading band karo
 
